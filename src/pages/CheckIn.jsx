@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { processCheckIn } from "../utils/checkin";
 import { getTokenBalance } from "../utils/xrpl";
 import { getWallet } from "../utils/wallet";
+import "./CheckIn.css";
 
 export default function CheckIn() {
   const { eventId, checkpointId } = useParams();
@@ -48,28 +49,28 @@ export default function CheckIn() {
   }, [eventId, checkpointId]);
 
   return (
-    <div style={styles.container}>
+    <div className="checkin-container">
       {status === "loading" && (
-        <div style={styles.card}>
-          <div style={styles.spinner}>⏳</div>
-          <h2 style={styles.title}>Processing Check-in...</h2>
-          <p style={styles.sub}>Connecting to XRPL Testnet</p>
+        <div className="checkin-card">
+          <div className="checkin-spinner">⏳</div>
+          <h2 className="checkin-title">Processing Check-in...</h2>
+          <p className="checkin-sub">Connecting to XRPL Testnet</p>
         </div>
       )}
 
       {status === "success" && (
-        <div style={{ ...styles.card, borderColor: "#4ade80" }}>
-          <div style={styles.emoji}>🎉</div>
-          <h2 style={{ ...styles.title, color: "#4ade80" }}>Checked In!</h2>
-          <p style={styles.sub}>{message}</p>
+        <div className="checkin-card checkin-card--success">
+          <div className="checkin-emoji">🎉</div>
+          <h2 className="checkin-title checkin-title--success">Checked In!</h2>
+          <p className="checkin-sub">{message}</p>
           {balance !== null && (
-            <div style={styles.balance}>
-              <span style={styles.balanceLabel}>Total Balance</span>
-              <span style={styles.balanceValue}>{balance} BLKPT</span>
+            <div className="checkin-balance">
+              <span className="checkin-balance-label">Total Balance</span>
+              <span className="checkin-balance-value">{balance} BLKPT</span>
             </div>
           )}
           {txHash && (
-            <p style={styles.hash}>
+            <p className="checkin-hash">
               TX: {txHash.slice(0, 8)}...{txHash.slice(-8)}
             </p>
           )}
@@ -77,28 +78,28 @@ export default function CheckIn() {
       )}
 
       {status === "already" && (
-        <div style={{ ...styles.card, borderColor: "#f59e0b" }}>
-          <div style={styles.emoji}>⚠️</div>
-          <h2 style={{ ...styles.title, color: "#f59e0b" }}>
+        <div className="checkin-card checkin-card--already">
+          <div className="checkin-emoji">⚠️</div>
+          <h2 className="checkin-title checkin-title--already">
             Already Checked In
           </h2>
-          <p style={styles.sub}>{message}</p>
+          <p className="checkin-sub">{message}</p>
           {balance !== null && (
-            <div style={styles.balance}>
-              <span style={styles.balanceLabel}>Current Balance</span>
-              <span style={styles.balanceValue}>{balance} BLKPT</span>
+            <div className="checkin-balance">
+              <span className="checkin-balance-label">Current Balance</span>
+              <span className="checkin-balance-value">{balance} BLKPT</span>
             </div>
           )}
         </div>
       )}
 
       {status === "error" && (
-        <div style={{ ...styles.card, borderColor: "#f87171" }}>
-          <div style={styles.emoji}>❌</div>
-          <h2 style={{ ...styles.title, color: "#f87171" }}>Check-in Failed</h2>
-          <p style={styles.sub}>{message}</p>
+        <div className="checkin-card checkin-card--error">
+          <div className="checkin-emoji">❌</div>
+          <h2 className="checkin-title checkin-title--error">Check-in Failed</h2>
+          <p className="checkin-sub">{message}</p>
           <button
-            style={styles.retryBtn}
+            className="checkin-retry-btn"
             onClick={() => window.location.reload()}
           >
             Try Again
@@ -109,55 +110,3 @@ export default function CheckIn() {
   );
 }
 
-const styles = {
-  container: {
-    minHeight: "100vh",
-    background: "#050810",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "24px",
-    fontFamily: "sans-serif",
-  },
-  card: {
-    background: "#0d1117",
-    border: "1px solid #1e2736",
-    borderRadius: "20px",
-    padding: "40px 32px",
-    maxWidth: "360px",
-    width: "100%",
-    textAlign: "center",
-  },
-  spinner: { fontSize: "48px", marginBottom: "16px" },
-  emoji: { fontSize: "56px", marginBottom: "16px" },
-  title: {
-    color: "#e2e8f0",
-    fontSize: "22px",
-    fontWeight: "700",
-    marginBottom: "8px",
-  },
-  sub: { color: "#64748b", fontSize: "14px", marginBottom: "20px" },
-  balance: {
-    background: "#161b27",
-    borderRadius: "12px",
-    padding: "16px",
-    marginTop: "16px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "4px",
-  },
-  balanceLabel: { color: "#64748b", fontSize: "11px", textTransform: "uppercase", letterSpacing: "1px" },
-  balanceValue: { color: "#00e5ff", fontSize: "28px", fontWeight: "700" },
-  hash: { color: "#334155", fontSize: "11px", fontFamily: "monospace", marginTop: "12px" },
-  retryBtn: {
-    background: "#f87171",
-    color: "#fff",
-    border: "none",
-    borderRadius: "10px",
-    padding: "12px 24px",
-    fontSize: "14px",
-    fontWeight: "600",
-    cursor: "pointer",
-    marginTop: "8px",
-  },
-};
