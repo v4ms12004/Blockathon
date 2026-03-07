@@ -7,7 +7,6 @@ import "./Verify.css";
 export default function Verify() {
   const { txHash } = useParams();
   const [step, setStep] = useState("loading");
-  // loading | verified | error
   const [badgeData, setBadgeData] = useState(null);
   const [txData, setTxData] = useState(null);
   const [error, setError] = useState("");
@@ -15,44 +14,47 @@ export default function Verify() {
   useEffect(() => {
     async function verifyBadge() {
       try {
-        // Step 1 — Fetch transaction from XRPL
-        const client = await getClient();
-        const response = await client.request({
-          command: "tx",
-          transaction: txHash,
-        });
-        await client.disconnect();
+        const provider = getProvider();
 
-        const tx = response.result;
+        const receipt = await provider.getTransactionReceipt(txHash);
+        if (!receipt) throw new Error("Transaction not found on Sepolia.");
 
-        // Step 2 — Extract memo (CID)
-        const memos = tx.Memos;
-        if (!memos || memos.length === 0) {
-          throw new Error("No memo found in transaction.");
+        const block = await provider.getBlock(receipt.blockNumber);
+        const timestamp = new Date(block.timestamp * 1000).toLocaleString();
+
+        const iface = new ethers.Interface(ABI);
+        let parsedEvent = null;
+
+        for (const log of receipt.logs) {
+          try {
+            const parsed = iface.parseLog(log);
+            if (parsed?.name === "BadgeClaimed") parsedEvent = parsed;
+          } catch {}
         }
 
-        const memoHex = memos[0].Memo.MemoData;
-        const memoDecoded = JSON.parse(
-          Buffer.from(memoHex, "hex").toString("utf8")
-        );
+        if (!parsedEvent) {
+          throw new Error("No badge claim found in this transaction.");
+        }
+
+        const eventId = parsedEvent.args[0].toString();
+        const participant = parsedEvent.args[1];
+        const tier = parsedEvent.args[2];
+        const cid = parsedEvent.args[3];
 
         setTxData({
-          issuer: tx.Account,
-          recipient: tx.Destination,
-          timestamp: new Date(
-            (tx.date + 946684800) * 1000
-          ).toLocaleString(),
-          txHash: txHash,
-          tier: memoDecoded.badgeTier,
-          eventId: memoDecoded.eventId,
+          eventId,
+          participant,
+          tier,
+          cid,
+          timestamp,
+          txHash,
+          blockNumber: receipt.blockNumber,
+          contractAddress: CONTRACT_ADDRESS,
         });
 
-        // Step 3 — Fetch badge metadata from IPFS if CID exists
-        if (memoDecoded.cid) {
-          const ipfsResult = await fetchFromIPFS(memoDecoded.cid);
-          if (ipfsResult.success) {
-            setBadgeData(ipfsResult.data);
-          }
+        if (cid) {
+          const ipfsResult = await fetchFromIPFS(cid);
+          if (ipfsResult.success) setBadgeData(ipfsResult.data);
         }
 
         setStep("verified");
@@ -106,7 +108,6 @@ export default function Verify() {
             </div>
           )}
 
-          {/* Badge metadata */}
           {badgeData && (
             <div className="verify-meta-box">
               <p className="verify-badge-name">{badgeData.name}</p>
@@ -139,6 +140,12 @@ export default function Verify() {
               <span className="verify-chain-label">TX Hash</span>
               <span className="verify-chain-value">
                 {txData.txHash.slice(0, 8)}...{txData.txHash.slice(-8)}
+              </span>
+            </div>
+            <div className="verify-chain-row">
+              <span className="verify-chain-label">Contract</span>
+              <span className="verify-chain-value">
+                {txData.contractAddress.slice(0, 6)}...{txData.contractAddress.slice(-4)}
               </span>
             </div>
           </div>

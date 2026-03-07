@@ -7,41 +7,58 @@ import "./CheckIn.css";
 
 export default function CheckIn() {
   const { eventId, checkpointId } = useParams();
-  const [status, setStatus] = useState("loading"); 
-  // loading | success | already | error
+  const [status, setStatus] = useState("loading");
   const [message, setMessage] = useState("");
   const [txHash, setTxHash] = useState("");
   const [balance, setBalance] = useState(null);
+  const [walletAddress, setWalletAddress] = useState("");
 
   useEffect(() => {
     async function handleCheckIn() {
-      setStatus("loading");
-      const result = await processCheckIn(checkpointId, eventId);
+      try {
+        setStatus("metamask");
+        if (!window.ethereum) {
+          setStatus("error");
+          setMessage("MetaMask not found. Please install MetaMask to check in.");
+          return;
+        }
 
-      if (result.success) {
-        setStatus("success");
-        setMessage(result.message);
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        const userAddress = accounts[0];
+        setWalletAddress(userAddress);
+
+        setStatus("processing");
+        const result = await checkInOnChain(eventId, checkpointId);
+
+        if (!result.success) {
+          if (result.error?.includes("Already checked in")) {
+            setStatus("already");
+            setMessage("You have already checked in at this checkpoint!");
+          } else {
+            setStatus("error");
+            setMessage(result.error || "Check-in failed. Please try again.");
+          }
+          const p = await getParticipantDetails(eventId, userAddress);
+          if (p.success) setBalance(p.participant.tokenBalance);
+          return;
+        }
+
         setTxHash(result.txHash);
 
-        // Fetch updated balance
-        const wallet = getWallet();
-        if (wallet) {
-          const bal = await getTokenBalance(wallet.address);
-          setBalance(bal);
-        }
-      } else if (result.reason === "ALREADY_CHECKED_IN") {
-        setStatus("already");
-        setMessage(result.message);
+        const wallet = getOrCreateWallet();
+        await sendTokens(wallet.address, 10, `checkpoint-${checkpointId}`, eventId);
 
-        // Still show balance
-        const wallet = getWallet();
-        if (wallet) {
-          const bal = await getTokenBalance(wallet.address);
-          setBalance(bal);
-        }
-      } else {
+        const p = await getParticipantDetails(eventId, userAddress);
+        if (p.success) setBalance(p.participant.tokenBalance);
+
+        setStatus("success");
+        setMessage("✅ Checked in! You earned 10 BLKPT tokens.");
+      } catch (err) {
+        console.error(err);
         setStatus("error");
-        setMessage(result.message);
+        setMessage(err.message || "Something went wrong.");
       }
     }
 

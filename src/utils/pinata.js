@@ -1,3 +1,6 @@
+// ─── Pinata IPFS Utility Functions ──────────────────────────────
+//THE FILE RESPONSIBLE FOR INTERACTING WITH PINATA API TO UPLOAD BADGE IMAGES AND METADATA TO IPFS, AND FETCHING DATA FROM IPFS USING CIDs.
+
 import axios from "axios";
 
 const PINATA_API_KEY = import.meta.env.VITE_PINATA_API_KEY;
