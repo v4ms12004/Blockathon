@@ -1,0 +1,101 @@
+.home-container {
+  min-height: 100vh;
+  background: #050810;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  font-family: sans-serif;
+}
+
+.home-content {
+  text-align: center;
+  max-width: 480px;
+  width: 100%;
+}
+
+.home-logo {
+  font-size: 48px;
+  color: #00e5ff;
+  margin-bottom: 16px;
+}
+
+.home-title {
+  color: #e2e8f0;
+  font-size: 36px;
+  font-weight: 800;
+  margin: 0 0 8px;
+  letter-spacing: -0.5px;
+}
+
+.home-tagline {
+  color: #64748b;
+  font-size: 15px;
+  margin: 0 0 48px;
+  line-height: 1.5;
+}
+
+.home-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.home-btn {
+  background: #0d1117;
+  border: 1px solid #1e2736;
+  border-radius: 16px;
+  padding: 24px 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+  transition: border-color 0.2s, background 0.2s;
+  width: 100%;
+}
+
+.home-btn:hover {
+  background: #111827;
+}
+
+.home-btn--organizer:hover {
+  border-color: #00e5ff;
+}
+
+.home-btn--participant:hover {
+  border-color: #a78bfa;
+}
+
+.home-btn-icon {
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.home-btn-label {
+  display: block;
+  color: #e2e8f0;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.home-btn-sub {
+  display: block;
+  color: #64748b;
+  font-size: 13px;
+}
+
+@media (max-width: 480px) {
+  .home-title {
+    font-size: 28px;
+  }
+
+  .home-btn {
+    padding: 20px;
+  }
+
+  .home-btn-label {
+    font-size: 16px;
+  }
+}
