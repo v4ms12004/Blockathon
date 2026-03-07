@@ -1,6 +1,6 @@
 // ─── XRPL Utility Functions ─────────────────────────────────────
 // THIS FILE CONTAINS ALL THE FUNCTIONS TO INTERACT WITH THE XRPL, SUCH AS CONNECTING TO THE NETWORK, GENERATING WALLETS, CHECKING BALANCES, SENDING PAYMENTS, AND CHECKING TRANSACTIONS.
-import xrpl from "xrpl";
+import * as xrpl from "xrpl";
 
 const NETWORK = import.meta.env.VITE_XRPL_NETWORK;
 const TOKEN_CURRENCY = import.meta.env.VITE_TOKEN_CURRENCY;

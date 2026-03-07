@@ -95,12 +95,17 @@ export async function checkInOnChain(eventId, checkpointId) {
     return { success: true, txHash: receipt.hash };
   } catch (err) {
     console.error("checkIn error:", err);
-    return { 
-      success: false, 
-      error: err.message.includes("Already checked in") 
-        ? "Already checked in at this checkpoint" 
-        : err.message 
-    };
+    const msg = err?.reason || err?.revert?.args?.[0] || err?.message || "";
+    if (msg.includes("Already checked in")) {
+      return { success: false, error: "Already checked in at this checkpoint" };
+    }
+    if (msg.includes("Invalid checkpoint")) {
+      return { success: false, error: "Invalid checkpoint" };
+    }
+    if (msg.includes("Event is not active")) {
+      return { success: false, error: "Event is not active" };
+    }
+    return { success: false, error: msg || "Check-in failed" };
   }
 }
 
@@ -134,7 +139,7 @@ export async function endEventOnChain(eventId) {
 export async function getEventDetails(eventId) {
   try {
     const contract = getContract();
-    const result = await contract.getEvent(eventId);
+    const result = await contract["getEvent(uint256)"](eventId);
     return {
       success: true,
       event: {

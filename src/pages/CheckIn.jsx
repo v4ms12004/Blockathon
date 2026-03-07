@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { processCheckIn } from "../utils/checkin";
-import { getTokenBalance } from "../utils/xrpl";
-import { getWallet } from "../utils/wallet";
+import { checkInOnChain, getParticipantDetails } from "../utils/contract";
+import { sendTokens } from "../utils/xrpl";
+import { getOrCreateWallet } from "../utils/wallet";
 import "./CheckIn.css";
 
 export default function CheckIn() {

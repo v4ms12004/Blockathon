@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getTokenBalance, redeemBadge } from "../utils/xrpl";
-import { getWallet } from "../utils/wallet";
-import { getBadgeTierForEvent, getEvent } from "../utils/eventStore";
-import { fetchFromIPFS, getIPFSImageUrl } from "../utils/pinata";
+import { getParticipantDetails, getEventDetails, claimBadgeOnChain } from "../utils/contract";
+import { pinBadgeMetadata, getIPFSImageUrl } from "../utils/pinata";
 import "./Redeem.css";
 
 export default function Redeem() {
@@ -18,6 +16,7 @@ export default function Redeem() {
   const [badgeCID, setBadgeCID] = useState("");
   const [error, setError] = useState("");
   const [userAddress, setUserAddress] = useState("");
+  const [badgeData, setBadgeData] = useState(null);
 
   const tierColor = {
     gold: "#f59e0b",
@@ -212,7 +211,7 @@ export default function Redeem() {
         <div className="redeem-card redeem-card--success">
           <div className="redeem-emoji">🎖️</div>
           <h2 className="redeem-title redeem-title--success">
-            Badge Claimed!
+            {txHash === "already-claimed" ? "Badge Already Claimed!" : "Badge Claimed!"}
           </h2>
 
           {badgeData && (
@@ -229,28 +228,34 @@ export default function Redeem() {
             </div>
           )}
 
-          <div className="redeem-verify-box">
-            <p className="redeem-verify-label">Share your verification link:</p>
-            <p className="redeem-verify-link">
-              {window.location.origin}/verify/{txHash}
-            </p>
-            <button
-              className="redeem-copy-btn"
-              onClick={() =>
-                navigator.clipboard.writeText(
-                  `${window.location.origin}/verify/${txHash}`
-                )
-              }
-            >
-              Copy Link
-            </button>
-          </div>
+          {txHash && txHash !== "already-claimed" && (
+            <div className="redeem-verify-box">
+              <p className="redeem-verify-label">Share your verification link:</p>
+              <p className="redeem-verify-link">
+                {window.location.origin}/verify/{txHash}
+              </p>
+              <button
+                className="redeem-copy-btn"
+                onClick={() =>
+                  navigator.clipboard.writeText(
+                    `${window.location.origin}/verify/${txHash}`
+                  )
+                }
+              >
+                Copy Link
+              </button>
+            </div>
+          )}
 
           <button
             className="redeem-view-btn"
-            onClick={() => navigate(`/verify/${txHash}`)}
+            onClick={() => txHash !== "already-claimed"
+              ? navigate(`/verify/${txHash}`)
+              : null
+            }
+            disabled={txHash === "already-claimed"}
           >
-            View Badge
+            {txHash === "already-claimed" ? "Already Claimed ✓" : "View Badge"}
           </button>
         </div>
       )}

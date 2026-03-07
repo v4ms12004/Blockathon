@@ -1,8 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getClient } from "../utils/xrpl";
-import { fetchFromIPFS, getIPFSImageUrl } from "../utils/pinata";
+import { getProvider } from "../utils/contract";
+import { fetchFromIPFS } from "../utils/pinata";
+import { ethers } from "ethers";
 import "./Verify.css";
+
+const ABI = [
+  "event BadgeClaimed(uint256 indexed eventId, address participant, string tier, string cid, uint256 tokenId)",
+];
+
+const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
 
 export default function Verify() {
   const { txHash } = useParams();
@@ -26,31 +33,44 @@ export default function Verify() {
         let parsedEvent = null;
 
         for (const log of receipt.logs) {
-          try {
-            const parsed = iface.parseLog(log);
-            if (parsed?.name === "BadgeClaimed") parsedEvent = parsed;
-          } catch {}
+        console.log("Log address:", log.address);
+        console.log("Log topics:", log.topics);
+        try {
+          const parsed = iface.parseLog({ topics: log.topics, data: log.data });
+          console.log("Parsed:", parsed);
+          if (parsed?.name === "BadgeClaimed") parsedEvent = parsed;
+        } catch (e) {
+          console.log("Parse error:", e.message);
         }
+      }
+
+        // Debug — remove after fix
+        console.log("Total logs:", receipt.logs.length);
+        console.log("Parsed event:", parsedEvent);
 
         if (!parsedEvent) {
           throw new Error("No badge claim found in this transaction.");
         }
 
+        console.log("Args:", parsedEvent.args);
         const eventId = parsedEvent.args[0].toString();
         const participant = parsedEvent.args[1];
         const tier = parsedEvent.args[2];
         const cid = parsedEvent.args[3];
+        const tokenId = parsedEvent.args[4]?.toString() || "0";
 
         setTxData({
-          eventId,
-          participant,
-          tier,
-          cid,
-          timestamp,
-          txHash,
-          blockNumber: receipt.blockNumber,
-          contractAddress: CONTRACT_ADDRESS,
-        });
+        issuer: CONTRACT_ADDRESS || "unknown",
+        recipient: participant,
+        tier,
+        cid,
+        tokenId,
+        timestamp,
+        txHash,
+        blockNumber: receipt.blockNumber,
+        contractAddress: CONTRACT_ADDRESS || "unknown",
+        eventId,
+      });
 
         if (cid) {
           const ipfsResult = await fetchFromIPFS(cid);
@@ -123,13 +143,13 @@ export default function Verify() {
             <div className="verify-chain-row">
               <span className="verify-chain-label">Issued By</span>
               <span className="verify-chain-value">
-                {txData.issuer.slice(0, 6)}...{txData.issuer.slice(-6)}
+                {txData.issuer.slice(0, 6)}...{txData.issuer.slice(-4)}
               </span>
             </div>
             <div className="verify-chain-row">
               <span className="verify-chain-label">Recipient</span>
               <span className="verify-chain-value">
-                {txData.recipient.slice(0, 6)}...{txData.recipient.slice(-6)}
+                {txData.recipient.slice(0, 6)}...{txData.recipient.slice(-4)}
               </span>
             </div>
             <div className="verify-chain-row">
