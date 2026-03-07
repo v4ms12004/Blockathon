@@ -1,3 +1,5 @@
+//The organizer will enter the event details here which will be used in the create-event script to generate the QR codes and save the event info. 
+// The organizer page will also display the generated QR codes for the event and allow the organizer to manage their events.
 import { useState, useEffect } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { generateQRData } from '../utils/qr'

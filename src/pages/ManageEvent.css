@@ -1,0 +1,310 @@
+/* ── Layout ──────────────────────────────────────────────────── */
+.me-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #050810;
+  font-family: sans-serif;
+  color: #e2e8f0;
+}
+
+/* ── Centered states (loading / error) ───────────────────────── */
+.me-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #050810;
+  gap: 16px;
+  color: #e2e8f0;
+  font-family: sans-serif;
+}
+
+.me-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #1e2736;
+  border-top-color: #00e5ff;
+  border-radius: 50%;
+  animation: me-spin 0.7s linear infinite;
+}
+
+@keyframes me-spin {
+  to { transform: rotate(360deg); }
+}
+
+.me-status-text {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+.me-error-text {
+  font-size: 14px;
+  color: #f87171;
+  margin: 0;
+  text-align: center;
+  max-width: 400px;
+}
+
+/* ── Sidebar (left) ──────────────────────────────────────────── */
+.me-sidebar {
+  width: 320px;
+  flex-shrink: 0;
+  background: #0d1117;
+  border-right: 1px solid #1e2736;
+  padding: 32px 24px;
+  overflow-y: auto;
+}
+
+.me-event-id {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #334155;
+  margin: 0 0 6px;
+}
+
+.me-event-name {
+  font-size: 22px;
+  font-weight: 800;
+  color: #e2e8f0;
+  margin: 0 0 16px;
+  line-height: 1.3;
+}
+
+/* ── Status badge ────────────────────────────────────────────── */
+.me-status-row {
+  margin-bottom: 24px;
+}
+
+.me-status-badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.me-status-badge--active {
+  color: #34d399;
+  border-color: #34d399;
+  background: #001a0d;
+}
+
+.me-status-badge--ended {
+  color: #64748b;
+  border-color: #334155;
+  background: #0d1117;
+}
+
+/* ── Info grid ───────────────────────────────────────────────── */
+.me-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.me-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: #161b27;
+  border: 1px solid #1e2736;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.me-info-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: #334155;
+}
+
+.me-info-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.me-info-value--mono {
+  font-family: monospace;
+  font-size: 13px;
+}
+
+/* ── Thresholds ──────────────────────────────────────────────── */
+.me-thresholds {
+  margin-bottom: 28px;
+}
+
+.me-thresholds-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: #334155;
+  margin: 0 0 10px;
+}
+
+.me-badges-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.me-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid;
+  display: inline-block;
+  width: fit-content;
+}
+
+.me-badge--gold   { color: #f59e0b; border-color: #f59e0b; background: #1a1200; }
+.me-badge--silver { color: #94a3b8; border-color: #94a3b8; background: #111827; }
+.me-badge--bronze { color: #b45309; border-color: #b45309; background: #180f00; }
+
+/* ── End Event ───────────────────────────────────────────────── */
+.me-end-section {
+  margin-top: 8px;
+}
+
+.me-end-btn {
+  width: 100%;
+  background: transparent;
+  color: #f87171;
+  border: 1px solid #f87171;
+  border-radius: 10px;
+  padding: 11px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.me-end-btn:hover:not(:disabled) {
+  background: #1a0a0a;
+}
+
+.me-end-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.me-end-error {
+  font-size: 12px;
+  color: #f87171;
+  margin: 8px 0 0;
+}
+
+.me-end-success {
+  margin-top: 12px;
+  background: #001a0d;
+  border: 1px solid #34d399;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.me-end-success-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #34d399;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin: 0 0 4px;
+}
+
+.me-end-success-hash {
+  font-size: 10px;
+  font-family: monospace;
+  color: #64748b;
+  word-break: break-all;
+  margin: 0;
+}
+
+/* ── Main (right) ────────────────────────────────────────────── */
+.me-main {
+  flex: 1;
+  padding: 40px 36px;
+  overflow-y: auto;
+}
+
+.me-qr-heading {
+  font-size: 18px;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin: 0 0 24px;
+}
+
+/* ── QR grid ─────────────────────────────────────────────────── */
+.me-qr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 20px;
+}
+
+.me-qr-card {
+  background: #0d1117;
+  border: 1px solid #1e2736;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.me-qr-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #00e5ff;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.me-qr-box {
+  background: #0d1117;
+  border-radius: 10px;
+  padding: 8px;
+  line-height: 0;
+}
+
+.me-qr-url {
+  font-size: 9px;
+  color: #334155;
+  font-family: monospace;
+  word-break: break-all;
+  text-align: center;
+  margin: 0;
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .me-layout {
+    flex-direction: column;
+  }
+
+  .me-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #1e2736;
+  }
+
+  .me-main {
+    padding: 24px 16px;
+  }
+
+  .me-qr-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+}

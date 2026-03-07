@@ -4,6 +4,8 @@ import Redeem from './pages/Redeem'
 import Verify from './pages/Verify'
 import Home from './pages/Home'
 import Organizer from './pages/Organizer'
+import ManageEvent from './pages/ManageEvent'
+import Participant from './pages/Participant'
 import './App.css'
 
 function App() {
@@ -13,10 +15,10 @@ function App() {
         {/* Organizer routes — Dev 2 will fill these */}
         <Route path="/" element={<Home />} />
         <Route path="/organizer" element={<Organizer />} />
-        <Route path="/organizer/event/:eventId" element={<h1 className="app-placeholder">📋 Manage Event — Dev 2</h1>} />
+        <Route path="/organizer/event/:eventId" element={<ManageEvent />} />
 
-        {/* Participant routes — Dev 2 will fill these */}
-        <Route path="/participant" element={<h1 className="app-placeholder">🎓 Participant View — Dev 2</h1>} />
+        {/* Participant routes */}
+        <Route path="/participant" element={<Participant />} />
 
         {/* Dev 1 routes — fully wired ✅ */}
         <Route path="/checkin/:eventId/:checkpointId" element={<CheckIn />} />
