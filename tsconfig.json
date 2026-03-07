@@ -1,4 +1,4 @@
-/* Based on https://github.com/tsconfig/bases/blob/501da2bcd640cf95c95805783e1012b992338f28/bases/node22.json */
+// Based on https://github.com/tsconfig/bases/blob/501da2bcd640cf95c95805783e1012b992338f28/bases/node22.json
 {
   "compilerOptions": {
     "lib": ["es2023"],
@@ -7,7 +7,11 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node16",
+    "resolveJsonModule": true,
     "outDir": "dist"
-  }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
