@@ -7,12 +7,13 @@ const ABI = [
   "function claimBadge(uint256 eventId, string memory badgeCID) external",
   "function endEvent(uint256 eventId) external",
   "function getEvent(uint256 eventId) external view returns (address, string, uint256, uint256, uint256, uint256, uint256, uint256, bool)",
-  "function getParticipant(uint256 eventId, address participant) external view returns (uint256, uint256, bool, string, string)",
+  "function getParticipant(uint256 eventId, address participant) external view returns (uint256, uint256, bool, string, string, uint256)",
   "function hasCheckedIn(uint256 eventId, uint256 checkpointId, address participant) external view returns (bool)",
   "event EventCreated(uint256 indexed eventId, string eventName, address organizer)",
   "event CheckedIn(uint256 indexed eventId, uint256 checkpointId, address participant, uint256 newBalance)",
-  "event BadgeClaimed(uint256 indexed eventId, address participant, string tier, string cid)",
-  "event EventEnded(uint256 indexed eventId)"
+  "event BadgeClaimed(uint256 indexed eventId, address participant, string tier, string cid, uint256 tokenId)",
+  "event EventEnded(uint256 indexed eventId)",
+  "function getNFTTokenURI(uint256 tokenId) external view returns (string)",
 ];
 
 const CONTRACT_ADDRESS = process.env.VITE_CONTRACT_ADDRESS;
@@ -113,17 +114,17 @@ console.log("   Is active:", eventData[8], "\n");
   const receipt4 = await tx4.wait();
   console.log("✅ Badge claimed — TX:", receipt4.hash);
 
-  // ── Step 8: Verify badge on chain ───────────────────────────
-  console.log("\n── Step 8: Verifying badge on chain ────────────────");
-  const finalData = await contract.getParticipant(eventId, signer.address);
-  console.log("✅ Badge tier:", finalData[3]);
-  console.log("   Badge CID:", finalData[4]);
-  console.log("   Has claimed:", finalData[2]);
+// ── Step 8: Verifying badge on chain ───────────────────────
+console.log("\n── Step 8: Verifying badge on chain ────────────────");
+const finalData = await contract.getParticipant(eventId, signer.address);
+console.log("✅ Badge tier:", finalData[3]);
+console.log("   Badge CID:", finalData[4]);
+console.log("   Has claimed:", finalData[2]);
+console.log("   NFT Token ID:", finalData[5].toString());
 
-  console.log("\n================================================");
-  console.log("🎉 ALL CONTRACT TESTS PASSED!\n");
-  console.log("Contract address:", CONTRACT_ADDRESS);
-  console.log("Save this eventId for frontend testing:", eventId);
+// Fetch NFT token URI
+const tokenURI = await contract.getNFTTokenURI(finalData[5]);
+console.log("   NFT Token URI:", tokenURI);
 }
 
 main().catch(console.error);
