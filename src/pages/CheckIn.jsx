@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { checkInOnChain, getParticipantDetails } from "../utils/contract";
-import { sendTokens } from "../utils/xrpl";
-import { getOrCreateWallet } from "../utils/wallet";
+import { processCheckIn } from "../utils/checkin";
+import { getTokenBalance } from "../utils/xrpl";
+import { getWallet } from "../utils/wallet";
 import "./CheckIn.css";
 
 export default function CheckIn() {
@@ -67,34 +67,18 @@ export default function CheckIn() {
 
   return (
     <div className="checkin-container">
-      {status === "metamask" && (
-        <div className="checkin-card">
-          <div className="checkin-emoji">🦊</div>
-          <h2 className="checkin-title">Connecting MetaMask...</h2>
-          <p className="checkin-sub">Please approve the connection in MetaMask</p>
-        </div>
-      )}
-
       {status === "loading" && (
         <div className="checkin-card">
-          <div className="checkin-emoji">⏳</div>
+          <div className="checkin-spinner">⏳</div>
           <h2 className="checkin-title">Processing Check-in...</h2>
-          <p className="checkin-sub">Connecting to blockchain</p>
-        </div>
-      )}
-
-      {status === "processing" && (
-        <div className="checkin-card">
-          <div className="checkin-emoji">⛓️</div>
-          <h2 className="checkin-title">Recording on Chain...</h2>
-          <p className="checkin-sub">Submitting to Sepolia + XRPL. This takes a few seconds.</p>
+          <p className="checkin-sub">Connecting to XRPL Testnet</p>
         </div>
       )}
 
       {status === "success" && (
-        <div className="checkin-card success">
+        <div className="checkin-card checkin-card--success">
           <div className="checkin-emoji">🎉</div>
-          <h2 className="checkin-title success">Checked In!</h2>
+          <h2 className="checkin-title checkin-title--success">Checked In!</h2>
           <p className="checkin-sub">{message}</p>
           {balance !== null && (
             <div className="checkin-balance">
@@ -102,15 +86,20 @@ export default function CheckIn() {
               <span className="checkin-balance-value">{balance} BLKPT</span>
             </div>
           )}
-          {txHash && <p className="checkin-hash">TX: {txHash.slice(0, 8)}...{txHash.slice(-8)}</p>}
-          {walletAddress && <p className="checkin-hash">Wallet: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</p>}
+          {txHash && (
+            <p className="checkin-hash">
+              TX: {txHash.slice(0, 8)}...{txHash.slice(-8)}
+            </p>
+          )}
         </div>
       )}
 
       {status === "already" && (
-        <div className="checkin-card already">
+        <div className="checkin-card checkin-card--already">
           <div className="checkin-emoji">⚠️</div>
-          <h2 className="checkin-title already">Already Checked In</h2>
+          <h2 className="checkin-title checkin-title--already">
+            Already Checked In
+          </h2>
           <p className="checkin-sub">{message}</p>
           {balance !== null && (
             <div className="checkin-balance">
@@ -122,11 +111,14 @@ export default function CheckIn() {
       )}
 
       {status === "error" && (
-        <div className="checkin-card error">
+        <div className="checkin-card checkin-card--error">
           <div className="checkin-emoji">❌</div>
-          <h2 className="checkin-title error">Check-in Failed</h2>
+          <h2 className="checkin-title checkin-title--error">Check-in Failed</h2>
           <p className="checkin-sub">{message}</p>
-          <button className="checkin-retry-btn" onClick={() => window.location.reload()}>
+          <button
+            className="checkin-retry-btn"
+            onClick={() => window.location.reload()}
+          >
             Try Again
           </button>
         </div>
@@ -134,3 +126,4 @@ export default function CheckIn() {
     </div>
   );
 }
+

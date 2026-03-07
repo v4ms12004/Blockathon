@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getParticipantDetails, getEventDetails, claimBadgeOnChain } from "../utils/contract";
-import { pinBadgeMetadata } from "../utils/pinata";
+import { getTokenBalance, redeemBadge } from "../utils/xrpl";
+import { getWallet } from "../utils/wallet";
+import { getBadgeTierForEvent, getEvent } from "../utils/eventStore";
+import { fetchFromIPFS, getIPFSImageUrl } from "../utils/pinata";
 import "./Redeem.css";
 
 export default function Redeem() {
@@ -147,21 +149,25 @@ export default function Redeem() {
         <div className="redeem-card">
           <div className="redeem-emoji">⏳</div>
           <h2 className="redeem-title">Checking Eligibility...</h2>
-          <p className="redeem-sub">Reading your data from Sepolia</p>
+          <p className="redeem-sub">Fetching your token balance from XRPL</p>
         </div>
       )}
 
       {step === "ineligible" && (
-        <div className="redeem-card warning">
+        <div className="redeem-card redeem-card--ineligible">
           <div className="redeem-emoji">😔</div>
-          <h2 className="redeem-title warning">Not Enough Tokens</h2>
+          <h2 className="redeem-title redeem-title--ineligible">
+            Not Enough Tokens
+          </h2>
           <p className="redeem-sub">
             You have {balance} BLKPT. You need at least{" "}
             {event?.bronzeThreshold || 10} tokens for a Bronze badge.
           </p>
           <div className="redeem-balance">
             <span className="redeem-balance-label">Your Balance</span>
-            <span className="redeem-balance-value warning">{balance} BLKPT</span>
+            <span className="redeem-balance-value redeem-balance-value--ineligible">
+              {balance} BLKPT
+            </span>
           </div>
         </div>
       )}
@@ -169,17 +175,24 @@ export default function Redeem() {
       {step === "eligible" && tierInfo && (
         <div className="redeem-card">
           <div className="redeem-emoji">
-            {tierInfo.tier === "gold" ? "🥇" : tierInfo.tier === "silver" ? "🥈" : "🥉"}
+            {tierInfo.tier === "gold"
+              ? "🥇"
+              : tierInfo.tier === "silver"
+              ? "🥈"
+              : "🥉"}
           </div>
           <h2 className="redeem-title">You Earned {tierInfo.label}!</h2>
           <p className="redeem-sub">
-            You have {balance} BLKPT tokens. Click below to claim your badge on chain.
+            You have {balance} BLKPT tokens. Redeem{" "}
+            {tierInfo.tokensRequired} to claim your badge.
           </p>
           <div className="redeem-balance">
             <span className="redeem-balance-label">Your Balance</span>
-            <span className="redeem-balance-value">{balance} BLKPT</span>
+            <span className="redeem-balance-value">
+              {balance} BLKPT
+            </span>
           </div>
-          <button className="redeem-btn" onClick={handleRedeem}>
+          <button className="redeem-redeem-btn" onClick={handleRedeem}>
             Claim {tierInfo.label} Badge
           </button>
         </div>
@@ -190,70 +203,48 @@ export default function Redeem() {
           <div className="redeem-emoji">⛓️</div>
           <h2 className="redeem-title">Minting Your Badge...</h2>
           <p className="redeem-sub">
-            Pinning to IPFS → recording on Sepolia. This takes a few seconds.
+            Submitting transaction to XRPL. This takes a few seconds.
           </p>
         </div>
       )}
 
       {step === "success" && (
-        <div className="redeem-card success">
+        <div className="redeem-card redeem-card--success">
           <div className="redeem-emoji">🎖️</div>
-          <h2 className="redeem-title success">
-            {txHash === "already-claimed" ? "Badge Already Claimed!" : "Badge Claimed!"}
+          <h2 className="redeem-title redeem-title--success">
+            Badge Claimed!
           </h2>
 
-          {tierInfo && (
-            <div
-              className="redeem-tier-badge"
-              style={{
-                background: `${tierColor[tierInfo.tier]}22`,
-                color: tierColor[tierInfo.tier],
-                borderColor: tierColor[tierInfo.tier],
-              }}
+          {badgeData && (
+            <div className="redeem-badge-preview">
+              {tierInfo?.imageCid && (
+                <img
+                  src={getIPFSImageUrl(tierInfo.imageCid)}
+                  alt="badge"
+                  className="redeem-badge-image"
+                />
+              )}
+              <p className="redeem-badge-name">{badgeData.name}</p>
+              <p className="redeem-badge-event">{badgeData.eventName}</p>
+            </div>
+          )}
+
+          <div className="redeem-verify-box">
+            <p className="redeem-verify-label">Share your verification link:</p>
+            <p className="redeem-verify-link">
+              {window.location.origin}/verify/{txHash}
+            </p>
+            <button
+              className="redeem-copy-btn"
+              onClick={() =>
+                navigator.clipboard.writeText(
+                  `${window.location.origin}/verify/${txHash}`
+                )
+              }
             >
-              {tierInfo.tier === "gold"
-                ? "🥇 Gold Badge"
-                : tierInfo.tier === "silver"
-                ? "🥈 Silver Badge"
-                : "🥉 Bronze Badge"}
-            </div>
-          )}
-
-          {badgeCID && (
-            <div className="redeem-cid-box">
-              <p className="redeem-cid-label">IPFS CID</p>
-              <p className="redeem-cid-value">
-                {badgeCID.slice(0, 10)}...{badgeCID.slice(-8)}
-              </p>
-              <a
-                href={`https://gateway.pinata.cloud/ipfs/${badgeCID}`}
-                target="_blank"
-                rel="noreferrer"
-                className="redeem-ipfs-link"
-              >
-                View on IPFS ↗
-              </a>
-            </div>
-          )}
-
-          {txHash && txHash !== "already-claimed" && (
-            <div className="redeem-verify-box">
-              <p className="redeem-verify-label">Share your verification link:</p>
-              <p className="redeem-verify-link">
-                {window.location.origin}/verify/{txHash}
-              </p>
-              <button
-                className="redeem-copy-btn"
-                onClick={() =>
-                  navigator.clipboard.writeText(
-                    `${window.location.origin}/verify/${txHash}`
-                  )
-                }
-              >
-                Copy Link
-              </button>
-            </div>
-          )}
+              Copy Link
+            </button>
+          </div>
 
           <button
             className="redeem-view-btn"
@@ -265,9 +256,11 @@ export default function Redeem() {
       )}
 
       {step === "error" && (
-        <div className="redeem-card error">
+        <div className="redeem-card redeem-card--error">
           <div className="redeem-emoji">❌</div>
-          <h2 className="redeem-title error">Something Went Wrong</h2>
+          <h2 className="redeem-title redeem-title--error">
+            Something Went Wrong
+          </h2>
           <p className="redeem-sub">{error}</p>
           <button
             className="redeem-retry-btn"
@@ -280,3 +273,4 @@ export default function Redeem() {
     </div>
   );
 }
+

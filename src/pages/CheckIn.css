@@ -18,11 +18,27 @@
   text-align: center;
 }
 
-.checkin-card.success { border-color: #4ade80; }
-.checkin-card.already { border-color: #f59e0b; }
-.checkin-card.error   { border-color: #f87171; }
+.checkin-card--success {
+  border-color: #4ade80;
+}
 
-.checkin-emoji { font-size: 56px; margin-bottom: 16px; }
+.checkin-card--already {
+  border-color: #f59e0b;
+}
+
+.checkin-card--error {
+  border-color: #f87171;
+}
+
+.checkin-spinner {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.checkin-emoji {
+  font-size: 56px;
+  margin-bottom: 16px;
+}
 
 .checkin-title {
   color: #e2e8f0;
@@ -31,9 +47,17 @@
   margin-bottom: 8px;
 }
 
-.checkin-title.success { color: #4ade80; }
-.checkin-title.already { color: #f59e0b; }
-.checkin-title.error   { color: #f87171; }
+.checkin-title--success {
+  color: #4ade80;
+}
+
+.checkin-title--already {
+  color: #f59e0b;
+}
+
+.checkin-title--error {
+  color: #f87171;
+}
 
 .checkin-sub {
   color: #64748b;
@@ -68,7 +92,7 @@
   color: #334155;
   font-size: 11px;
   font-family: monospace;
-  margin-top: 8px;
+  margin-top: 12px;
 }
 
 .checkin-retry-btn {

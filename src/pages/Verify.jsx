@@ -1,15 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getProvider } from "../utils/contract";
-import { fetchFromIPFS } from "../utils/pinata";
-import { ethers } from "ethers";
+import { getClient } from "../utils/xrpl";
+import { fetchFromIPFS, getIPFSImageUrl } from "../utils/pinata";
 import "./Verify.css";
-
-const ABI = [
-  "event BadgeClaimed(uint256 indexed eventId, address participant, string tier, string cid)",
-];
-
-const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
 
 export default function Verify() {
   const { txHash } = useParams();
@@ -75,37 +68,37 @@ export default function Verify() {
     if (txHash) verifyBadge();
   }, [txHash]);
 
-  const tierColor = {
-    gold: "#f59e0b",
-    silver: "#94a3b8",
-    bronze: "#b45309",
-  };
-
   return (
     <div className="verify-container">
       {step === "loading" && (
         <div className="verify-card">
           <div className="verify-emoji">⏳</div>
           <h2 className="verify-title">Verifying Badge...</h2>
-          <p className="verify-sub">Reading transaction from Sepolia</p>
+          <p className="verify-sub">Reading transaction from XRPL</p>
         </div>
       )}
 
       {step === "verified" && txData && (
-        <div className="verify-card success">
-          <div className="verify-badge">
+        <div className="verify-card verify-card--verified">
+          {/* Verified header */}
+          <div className="verify-verified-badge">
             <span className="verify-checkmark">✓</span>
-            <span className="verify-badge-text">Verified on Ethereum Sepolia</span>
+            <span className="verify-verified-text">Verified on XRPL</span>
           </div>
 
+          {/* Badge image */}
+          {badgeData?.imageCid && (
+            <img
+              src={getIPFSImageUrl(badgeData.imageCid)}
+              alt="badge"
+              className="verify-badge-image"
+            />
+          )}
+
+          {/* Tier */}
           {txData.tier && (
             <div
-              className="verify-tier"
-              style={{
-                background: `${tierColor[txData.tier]}22`,
-                color: tierColor[txData.tier],
-                borderColor: tierColor[txData.tier],
-              }}
+              className={`verify-tier-badge verify-tier-badge--${txData.tier}`}
             >
               {txData.tier === "gold"
                 ? "🥇 Gold Badge"
@@ -125,24 +118,23 @@ export default function Verify() {
             </div>
           )}
 
+          {/* On-chain details */}
           <div className="verify-chain-box">
             <div className="verify-chain-row">
-              <span className="verify-chain-label">Recipient</span>
+              <span className="verify-chain-label">Issued By</span>
               <span className="verify-chain-value">
-                {txData.participant.slice(0, 6)}...{txData.participant.slice(-4)}
+                {txData.issuer.slice(0, 6)}...{txData.issuer.slice(-6)}
               </span>
             </div>
             <div className="verify-chain-row">
-              <span className="verify-chain-label">Event ID</span>
-              <span className="verify-chain-value">#{txData.eventId}</span>
+              <span className="verify-chain-label">Recipient</span>
+              <span className="verify-chain-value">
+                {txData.recipient.slice(0, 6)}...{txData.recipient.slice(-6)}
+              </span>
             </div>
             <div className="verify-chain-row">
               <span className="verify-chain-label">Timestamp</span>
               <span className="verify-chain-value">{txData.timestamp}</span>
-            </div>
-            <div className="verify-chain-row">
-              <span className="verify-chain-label">Block</span>
-              <span className="verify-chain-value">#{txData.blockNumber}</span>
             </div>
             <div className="verify-chain-row">
               <span className="verify-chain-label">TX Hash</span>
@@ -158,40 +150,23 @@ export default function Verify() {
             </div>
           </div>
 
-          {txData.cid && (
-            <a
-              href={`https://gateway.pinata.cloud/ipfs/${txData.cid}`}
-              target="_blank"
-              rel="noreferrer"
-              className="verify-link ipfs"
-            >
-              View Badge Metadata on IPFS ↗
-            </a>
-          )}
-
-          <a
-            href={`https://sepolia.etherscan.io/tx/${txData.txHash}`}
-            target="_blank"
-            rel="noreferrer"
-            className="verify-link etherscan"
-          >
-            View on Etherscan ↗
-          </a>
-
           <p className="verify-footer">
-            This badge is permanently recorded on Ethereum Sepolia and cannot
-            be tampered with. Badge content is stored on IPFS via Pinata.
+            This badge is permanently recorded on the XRP Ledger and cannot
+            be tampered with.
           </p>
         </div>
       )}
 
       {step === "error" && (
-        <div className="verify-card error">
+        <div className="verify-card verify-card--error">
           <div className="verify-emoji">❌</div>
-          <h2 className="verify-title error">Verification Failed</h2>
+          <h2 className="verify-title verify-title--error">
+            Verification Failed
+          </h2>
           <p className="verify-sub">{error}</p>
         </div>
       )}
     </div>
   );
 }
+
