@@ -1,0 +1,709 @@
+
+/* ── Reset & Base ──────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Page Shell ────────────────────────────────────────────── */
+.participant-page {
+  min-height: 100vh;
+  background-color: #050810;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 229, 255, 0.07), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 90%, rgba(74, 222, 128, 0.04), transparent);
+  display: flex;
+  justify-content: center;
+  padding: 24px 16px 48px;
+  font-family: sans-serif;
+}
+
+.participant-container {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Header ────────────────────────────────────────────────── */
+.participant-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 8px;
+}
+
+.participant-logo {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #00e5ff;
+  opacity: 0.8;
+}
+
+.participant-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #e2e8f0;
+  letter-spacing: -0.02em;
+}
+
+.participant-subtitle {
+  font-size: 14px;
+  color: #64748b;
+  text-align: center;
+}
+
+/* ── Wallet Pill ───────────────────────────────────────────── */
+.wallet-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: #0d1117;
+  border: 1px solid #1e2736;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: #94a3b8;
+  font-family: monospace;
+  margin-top: 4px;
+}
+
+.wallet-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 6px #4ade80;
+  flex-shrink: 0;
+}
+
+/* ── Event Name Bar ────────────────────────────────────────── */
+.event-name-bar {
+  background: #0d1117;
+  border: 1px solid #1e2736;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.event-name-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.event-name-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e2e8f0;
+  flex: 1;
+}
+
+.event-status-pill {
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 20px;
+  padding: 3px 10px;
+  flex-shrink: 0;
+}
+
+.event-status-pill.active {
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.2);
+}
+
+.event-status-pill.ended {
+  background: rgba(248, 113, 113, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.2);
+}
+
+/* ── Balance Card (Hero Stat) ──────────────────────────────── */
+.balance-card {
+  background: #0d1117;
+  border: 1px solid #1e2736;
+  border-radius: 20px;
+  padding: 32px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.balance-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #00e5ff, transparent);
+}
+
+.balance-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.balance-number {
+  font-size: 64px;
+  font-weight: 800;
+  color: #00e5ff;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-shadow: 0 0 40px rgba(0, 229, 255, 0.3);
+}
+
+.balance-unit {
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.1em;
+  margin-top: 8px;
+}
+
+/* ── Check-in Progress Card ────────────────────────────────── */
+.checkin-card {
+  background: #0d1117;
+  border: 1px solid #1e2736;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.checkin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.checkin-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+
+.checkin-count {
+  font-size: 14px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.progress-bar-track {
+  width: 100%;
+  height: 8px;
+  background: #161b27;
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00e5ff, #4ade80);
+  border-radius: 100px;
+  transition: width 0.6s ease;
+  min-width: 4px;
+}
+
+.progress-percent {
+  font-size: 12px;
+  color: #64748b;
+  text-align: right;
+}
+
+/* ── Badge Eligibility Section ─────────────────────────────── */
+.badge-section {
+  background: #0d1117;
+  border: 1px solid #1e2736;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.badge-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+
+.tier-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tier-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.tier-item.tier-achieved {
+  background: #161b27;
+  border-color: #1e2736;
+}
+
+.tier-item.tier-locked {
+  background: rgba(13, 17, 23, 0.5);
+  border-color: #161b27;
+  opacity: 0.6;
+}
+
+.tier-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.tier-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.tier-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.tier-req {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.tier-badge-check {
+  font-size: 16px;
+  font-weight: 700;
+  color: #4ade80;
+  flex-shrink: 0;
+}
+
+.tier-needed {
+  font-size: 12px;
+  color: #64748b;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.no-eligibility-msg {
+  text-align: center;
+  padding: 10px;
+}
+
+.no-eligibility-msg p {
+  font-size: 14px;
+  color: #64748b;
+}
+
+/* ── Action Cards ──────────────────────────────────────────── */
+.action-card {
+  border-radius: 16px;
+  padding: 24px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid transparent;
+}
+
+/* Claimed state */
+.action-card.claimed {
+  background: rgba(74, 222, 128, 0.05);
+  border-color: rgba(74, 222, 128, 0.2);
+}
+
+.claimed-icon {
+  font-size: 40px;
+}
+
+.claimed-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.claimed-tier {
+  font-size: 14px;
+  color: #94a3b8;
+}
+
+.claimed-tier strong {
+  color: #e2e8f0;
+  text-transform: capitalize;
+}
+
+.view-badge-btn {
+  margin-top: 6px;
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  color: #4ade80;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: sans-serif;
+}
+
+.view-badge-btn:hover {
+  background: rgba(74, 222, 128, 0.18);
+}
+
+/* Eligible to claim */
+.action-card.eligible {
+  background: rgba(0, 229, 255, 0.04);
+  border-color: rgba(0, 229, 255, 0.2);
+}
+
+.eligible-icon {
+  font-size: 40px;
+}
+
+.eligible-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #e2e8f0;
+  text-transform: capitalize;
+}
+
+.eligible-text {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.claim-btn {
+  margin-top: 6px;
+  background: #00e5ff;
+  border: none;
+  color: #050810;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 13px 32px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.claim-btn:hover {
+  background: #33eeff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(0, 229, 255, 0.25);
+}
+
+/* Pending (event still active) */
+.action-card.pending {
+  background: rgba(245, 158, 11, 0.04);
+  border-color: rgba(245, 158, 11, 0.15);
+}
+
+.pending-icon {
+  font-size: 36px;
+}
+
+.pending-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f59e0b;
+  text-transform: capitalize;
+}
+
+.pending-text {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+/* ── Connect Card ──────────────────────────────────────────── */
+.connect-card {
+  background: #0d1117;
+  border: 1px solid #1e2736;
+  border-radius: 20px;
+  padding: 36px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.connect-card-icon {
+  font-size: 40px;
+  margin-bottom: 4px;
+}
+
+.connect-card-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.connect-card-text {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.6;
+  max-width: 280px;
+}
+
+.connect-btn {
+  margin-top: 8px;
+  background: #00e5ff;
+  border: none;
+  color: #050810;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 14px 32px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: sans-serif;
+}
+
+.connect-btn:hover {
+  background: #33eeff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(0, 229, 255, 0.25);
+}
+
+.connect-btn-icon {
+  font-size: 18px;
+}
+
+/* ── Steps ─────────────────────────────────────────────────── */
+.participant-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 4px 0;
+}
+
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.step-item span {
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #161b27;
+  border: 1px solid #1e2736;
+  color: #00e5ff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step-divider {
+  width: 24px;
+  height: 1px;
+  background: #1e2736;
+  flex-shrink: 0;
+  margin-bottom: 20px;
+}
+
+/* ── Loading Card ──────────────────────────────────────────── */
+.loading-card {
+  background: #0d1117;
+  border: 1px solid #1e2736;
+  border-radius: 20px;
+  padding: 48px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #1e2736;
+  border-top-color: #00e5ff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.loading-subtext {
+  font-size: 12px;
+  color: #1e2736;
+  font-family: monospace;
+}
+
+/* ── Error Card ────────────────────────────────────────────── */
+.error-card {
+  background: rgba(248, 113, 113, 0.05);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  border-radius: 16px;
+  padding: 32px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.error-icon {
+  font-size: 32px;
+}
+
+.error-text {
+  font-size: 14px;
+  color: #f87171;
+  line-height: 1.5;
+}
+
+.retry-btn {
+  background: transparent;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  color: #f87171;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: sans-serif;
+}
+
+.retry-btn:hover {
+  background: rgba(248, 113, 113, 0.08);
+}
+
+/* ── MetaMask Warning ──────────────────────────────────────── */
+.metamask-warning {
+  background: rgba(245, 158, 11, 0.05);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 16px;
+  padding: 32px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.metamask-warning-icon {
+  font-size: 36px;
+}
+
+.metamask-warning-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #f59e0b;
+}
+
+.metamask-warning-text {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.metamask-install-btn {
+  display: inline-block;
+  margin-top: 6px;
+  background: #f59e0b;
+  color: #050810;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 11px 28px;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-family: sans-serif;
+}
+
+.metamask-install-btn:hover {
+  background: #fbbf24;
+}
+
+/* ── Refresh Button ────────────────────────────────────────── */
+.refresh-btn {
+  background: transparent;
+  border: 1px solid #1e2736;
+  color: #64748b;
+  font-size: 13px;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: sans-serif;
+  width: 100%;
+}
+
+.refresh-btn:hover {
+  border-color: #00e5ff;
+  color: #00e5ff;
+}
+
+/* ── Mobile responsive ─────────────────────────────────────── */
+@media (max-width: 380px) {
+  .balance-number {
+    font-size: 52px;
+  }
+
+  .participant-title {
+    font-size: 22px;
+  }
+
+  .tier-item {
+    padding: 10px 12px;
+  }
+}

@@ -16,6 +16,7 @@ const PRIVATE_KEY = process.env.VITE_DEPLOYER_PRIVATE_KEY;
 const APP_URL = process.env.VITE_APP_URL || "http://localhost:5173";
 
 // ── Event configuration — edit these before demo day ──────────
+//These EVENT_Config values are hardcoded they should a drawing the values from the organizer page.
 const EVENT_CONFIG = {
   eventName: "Block-a-Thon KU 2026",
   totalParticipants: 50,
@@ -40,6 +41,8 @@ async function main() {
   console.log("Sepolia ETH balance:", ethers.formatEther(balance), "ETH\n");
 
   // ── Step 1: Create event on chain ───────────────────────────
+  // These values are hardcoded for demo purposes. 
+  // In a real app, you'd get these from user input in the organizer dashboard.
   console.log("── Creating event on chain ─────────────────────────");
   console.log("Event name:", EVENT_CONFIG.eventName);
   console.log("Checkpoints:", EVENT_CONFIG.totalCheckpoints);
@@ -112,6 +115,7 @@ async function main() {
   console.log(`   URL: ${redeemUrl}`);
 
   // ── Step 5: Save event info to file ─────────────────────────
+  // the event confidg would be replaced with functions from the organizer page to get the values from the form input.
   const eventInfo = {
     eventId,
     eventName: EVENT_CONFIG.eventName,
@@ -143,6 +147,7 @@ async function main() {
   console.log("✅ QR codes saved to: qr-codes/");
   console.log("✅ Event info saved to: event-info.json");
   console.log("\n📋 Add this to your .env for frontend testing:");
+  //this Event ID will be updated in the .env file for the frontend to use.
   console.log("VITE_ACTIVE_EVENT_ID=" + eventId);
   console.log("\n🎯 Demo day checklist:");
   console.log("   1. Print or display QR codes from qr-codes/ folder");
