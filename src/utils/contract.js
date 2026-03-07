@@ -7,12 +7,14 @@ const ABI = [
   "function claimBadge(uint256 eventId, string memory badgeCID) external",
   "function endEvent(uint256 eventId) external",
   "function getEvent(uint256 eventId) external view returns (address, string, uint256, uint256, uint256, uint256, uint256, uint256, bool)",
-  "function getParticipant(uint256 eventId, address participant) external view returns (uint256, uint256, bool, string, string)",
+  "function getParticipant(uint256 eventId, address participant) external view returns (uint256, uint256, bool, string, string, uint256)",
   "function hasCheckedIn(uint256 eventId, uint256 checkpointId, address participant) external view returns (bool)",
   "function getParticipants(uint256 eventId) external view returns (address[])",
+  "function getNFTTokenURI(uint256 tokenId) external view returns (string)",
+  "function tokenURI(uint256 tokenId) external view returns (string)",
   "event EventCreated(uint256 indexed eventId, string eventName, address organizer)",
   "event CheckedIn(uint256 indexed eventId, uint256 checkpointId, address participant, uint256 newBalance)",
-  "event BadgeClaimed(uint256 indexed eventId, address participant, string tier, string cid)",
+  "event BadgeClaimed(uint256 indexed eventId, address participant, string tier, string cid, uint256 tokenId)",
   "event EventEnded(uint256 indexed eventId)"
 ];
 
@@ -166,6 +168,7 @@ export async function getParticipantDetails(eventId, address) {
         hasClaimedBadge: result[2],
         badgeTier: result[3],
         badgeCID: result[4],
+        nftTokenId: result[5].toString(),
       }
     };
   } catch (err) {

@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-contract BlockBadge {
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract BlockBadge is ERC721URIStorage, Ownable {
+
     // ── Structs ───────────────────────────────────────────────
     struct Event {
         address organizer;
@@ -19,34 +24,31 @@ contract BlockBadge {
         uint256 tokenBalance;
         uint256 checkinCount;
         bool hasClaimedBadge;
-        string badgeTier;  // "gold", "silver", "bronze", ""
-        string badgeCID;   // IPFS CID from Pinata
+        string badgeTier;
+        string badgeCID;
+        uint256 nftTokenId;
     }
 
     // ── State variables ───────────────────────────────────────
     uint256 public eventCount;
+    uint256 private _tokenIdCounter;
 
-    // eventId => Event
     mapping(uint256 => Event) public events;
-
-    // eventId => checkpointId => exists
     mapping(uint256 => mapping(uint256 => bool)) public checkpoints;
-
-    // eventId => participantAddress => Participant
     mapping(uint256 => mapping(address => Participant)) public participants;
-
-    // eventId => checkpointId => participantAddress => checked in
     mapping(uint256 => mapping(uint256 => mapping(address => bool))) public checkedIn;
-
-    // eventId => list of participant addresses
     mapping(uint256 => address[]) public participantList;
 
-    // ── Events (Solidity events for frontend listening) ───────
+    // ── Events ────────────────────────────────────────────────
+    //    event EventCreated(uint256 indexed eventId, string eventName, address organizer, uint256 goldThreshold, uint256 silverThreshold, uint256 bronzeThreshold);
     event EventCreated(uint256 indexed eventId, string eventName, address organizer);
     event CheckpointCreated(uint256 indexed eventId, uint256 checkpointId);
     event CheckedIn(uint256 indexed eventId, uint256 checkpointId, address participant, uint256 newBalance);
-    event BadgeClaimed(uint256 indexed eventId, address participant, string tier, string cid);
+    event BadgeClaimed(uint256 indexed eventId, address participant, string tier, string cid, uint256 tokenId);
     event EventEnded(uint256 indexed eventId);
+
+    // ── Constructor ───────────────────────────────────────────
+    constructor() ERC721("BlockBadge", "BLKBDG") Ownable(msg.sender) {}
 
     // ── Modifiers ─────────────────────────────────────────────
     modifier onlyOrganizer(uint256 eventId) {
@@ -59,9 +61,7 @@ contract BlockBadge {
         _;
     }
 
-    // ── Functions ─────────────────────────────────────────────
-
-    // Organizer creates an event
+    // ── Create Event ──────────────────────────────────────────
     function createEvent(
         string memory eventName,
         uint256 totalParticipants,
@@ -90,7 +90,6 @@ contract BlockBadge {
             eventName: eventName
         });
 
-        // Auto-create checkpoints
         for (uint256 i = 0; i < totalCheckpoints; i++) {
             checkpoints[eventId][i] = true;
             emit CheckpointCreated(eventId, i);
@@ -100,7 +99,7 @@ contract BlockBadge {
         return eventId;
     }
 
-    // Participant checks in at a checkpoint
+    // ── Check In ──────────────────────────────────────────────
     function checkIn(
         uint256 eventId,
         uint256 checkpointId
@@ -111,15 +110,12 @@ contract BlockBadge {
             "Already checked in at this checkpoint"
         );
 
-        // Mark as checked in
         checkedIn[eventId][checkpointId][msg.sender] = true;
 
-        // Add to participant list if first time
         if (participants[eventId][msg.sender].checkinCount == 0) {
             participantList[eventId].push(msg.sender);
         }
 
-        // Award tokens
         participants[eventId][msg.sender].tokenBalance += events[eventId].tokensPerCheckin;
         participants[eventId][msg.sender].checkinCount += 1;
 
@@ -131,7 +127,7 @@ contract BlockBadge {
         );
     }
 
-    // Participant claims their badge
+    // ── Claim Badge + Mint NFT ────────────────────────────────
     function claimBadge(
         uint256 eventId,
         string memory badgeCID
@@ -156,22 +152,30 @@ contract BlockBadge {
             revert("Not enough tokens to claim any badge");
         }
 
+        // Mint ERC-721 NFT to participant
+        uint256 newTokenId = _tokenIdCounter++;
+        _safeMint(msg.sender, newTokenId);
+
+        // Set token URI to IPFS CID
+        string memory tokenURI = string(abi.encodePacked("ipfs://", badgeCID));
+        _setTokenURI(newTokenId, tokenURI);
+
+        // Update participant record
         participants[eventId][msg.sender].hasClaimedBadge = true;
         participants[eventId][msg.sender].badgeTier = tier;
         participants[eventId][msg.sender].badgeCID = badgeCID;
+        participants[eventId][msg.sender].nftTokenId = newTokenId;
 
-        emit BadgeClaimed(eventId, msg.sender, tier, badgeCID);
+        emit BadgeClaimed(eventId, msg.sender, tier, badgeCID, newTokenId);
     }
 
-    // Organizer ends the event
+    // ── End Event ─────────────────────────────────────────────
     function endEvent(uint256 eventId) external onlyOrganizer(eventId) {
         events[eventId].isActive = false;
         emit EventEnded(eventId);
     }
 
-    // ── View functions ────────────────────────────────────────
-
-    // Get participant details
+    // ── View Functions ────────────────────────────────────────
     function getParticipant(
         uint256 eventId,
         address participant
@@ -180,7 +184,8 @@ contract BlockBadge {
         uint256 checkinCount,
         bool hasClaimedBadge,
         string memory badgeTier,
-        string memory badgeCID
+        string memory badgeCID,
+        uint256 nftTokenId
     ) {
         Participant memory p = participants[eventId][participant];
         return (
@@ -188,11 +193,11 @@ contract BlockBadge {
             p.checkinCount,
             p.hasClaimedBadge,
             p.badgeTier,
-            p.badgeCID
+            p.badgeCID,
+            p.nftTokenId
         );
     }
 
-    // Get event details
     function getEvent(uint256 eventId) external view returns (
         address organizer,
         string memory eventName,
@@ -218,7 +223,6 @@ contract BlockBadge {
         );
     }
 
-    // Check if participant already checked in at a checkpoint
     function hasCheckedIn(
         uint256 eventId,
         uint256 checkpointId,
@@ -227,10 +231,16 @@ contract BlockBadge {
         return checkedIn[eventId][checkpointId][participant];
     }
 
-    // Get all participants for an event
     function getParticipants(
         uint256 eventId
     ) external view returns (address[] memory) {
         return participantList[eventId];
+    }
+
+    // Get NFT token URI
+    function getNFTTokenURI(
+        uint256 tokenId
+    ) external view returns (string memory) {
+        return tokenURI(tokenId);
     }
 }
