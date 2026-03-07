@@ -11,77 +11,136 @@ export default function Redeem() {
   const navigate = useNavigate();
 
   const [step, setStep] = useState("loading");
-  // loading | eligible | redeeming | success | ineligible | error
   const [balance, setBalance] = useState(0);
   const [tierInfo, setTierInfo] = useState(null);
   const [event, setEvent] = useState(null);
   const [txHash, setTxHash] = useState("");
-  const [badgeData, setBadgeData] = useState(null);
+  const [badgeCID, setBadgeCID] = useState("");
   const [error, setError] = useState("");
+  const [userAddress, setUserAddress] = useState("");
+
+  const tierColor = {
+    gold: "#f59e0b",
+    silver: "#94a3b8",
+    bronze: "#b45309",
+  };
 
   useEffect(() => {
     async function loadEligibility() {
-      const wallet = getWallet();
-      if (!wallet) {
+      try {
+        if (!window.ethereum) {
+          setStep("error");
+          setError("MetaMask not found. Please install MetaMask.");
+          return;
+        }
+
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        const address = accounts[0];
+        setUserAddress(address);
+
+        const eventResult = await getEventDetails(eventId);
+        if (!eventResult.success) {
+          setStep("error");
+          setError("Event not found on chain.");
+          return;
+        }
+
+        const ev = eventResult.event;
+        setEvent(ev);
+
+        if (ev.isActive) {
+          setStep("error");
+          setError("Event is still active. Wait for the organizer to end the event.");
+          return;
+        }
+
+        const pResult = await getParticipantDetails(eventId, address);
+        if (!pResult.success) {
+          setStep("error");
+          setError("Could not fetch your participation data.");
+          return;
+        }
+
+        const p = pResult.participant;
+
+        if (p.hasClaimedBadge) {
+          setStep("success");
+          setTxHash("already-claimed");
+          setBadgeCID(p.badgeCID);
+          setTierInfo({ tier: p.badgeTier });
+          return;
+        }
+
+        const bal = parseInt(p.tokenBalance);
+        setBalance(bal);
+
+        const gold = parseInt(ev.goldThreshold);
+        const silver = parseInt(ev.silverThreshold);
+        const bronze = parseInt(ev.bronzeThreshold);
+
+        if (bal >= gold) {
+          setTierInfo({ tier: "gold", label: "🥇 Gold", tokensRequired: gold });
+        } else if (bal >= silver) {
+          setTierInfo({ tier: "silver", label: "🥈 Silver", tokensRequired: silver });
+        } else if (bal >= bronze) {
+          setTierInfo({ tier: "bronze", label: "🥉 Bronze", tokensRequired: bronze });
+        } else {
+          setStep("ineligible");
+          return;
+        }
+
+        setStep("eligible");
+      } catch (err) {
+        console.error(err);
         setStep("error");
-        setError("No wallet found. Please check in at an event first.");
-        return;
+        setError(err.message || "Something went wrong.");
       }
-
-      const eventData = getEvent(eventId);
-      if (!eventData) {
-        setStep("error");
-        setError("Event not found.");
-        return;
-      }
-      setEvent(eventData);
-
-      const bal = await getTokenBalance(wallet.address);
-      setBalance(bal);
-
-      const tier = getBadgeTierForEvent(eventId, bal);
-      if (!tier) {
-        setStep("ineligible");
-        return;
-      }
-
-      setTierInfo(tier);
-      setStep("eligible");
     }
 
     loadEligibility();
   }, [eventId]);
 
   async function handleRedeem() {
-    const wallet = getWallet();
-    if (!wallet || !tierInfo) return;
-
+    if (!tierInfo) return;
     setStep("redeeming");
 
-    const result = await redeemBadge(
-      wallet.seed,
-      tierInfo.tokensRequired,
-      tierInfo.tier,
-      eventId
-    );
+    try {
+      const metadata = {
+        name: `${tierInfo.tier.charAt(0).toUpperCase() + tierInfo.tier.slice(1)} Badge`,
+        eventName: event?.eventName || "BlockBadge Event",
+        tier: tierInfo.tier,
+        date: new Date().toISOString(),
+        description: "Awarded for outstanding participation",
+        recipient: userAddress,
+        eventId: eventId,
+      };
 
-    if (!result.success) {
-      setStep("error");
-      setError(result.error || "Redemption failed. Please try again.");
-      return;
-    }
-
-    setTxHash(result.txHash);
-
-    // Fetch badge metadata from IPFS
-    if (tierInfo.cid) {
-      const ipfsResult = await fetchFromIPFS(tierInfo.cid);
-      if (ipfsResult.success) {
-        setBadgeData(ipfsResult.data);
+      const pinResult = await pinBadgeMetadata(metadata);
+      if (!pinResult.success) {
+        setStep("error");
+        setError("Failed to pin badge to IPFS. Please try again.");
+        return;
       }
-    }
 
-    setStep("success");
+      const cid = pinResult.cid;
+      setBadgeCID(cid);
+
+      const claimResult = await claimBadgeOnChain(eventId, cid);
+      if (!claimResult.success) {
+        setStep("error");
+        setError(claimResult.error || "Badge claim failed.");
+        return;
+      }
+
+      setTxHash(claimResult.txHash);
+      setStep("success");
+    } catch (err) {
+      console.error(err);
+      setStep("error");
+      setError(err.message || "Something went wrong.");
+    }
   }
 
   return (
@@ -102,7 +161,7 @@ export default function Redeem() {
           </h2>
           <p className="redeem-sub">
             You have {balance} BLKPT. You need at least{" "}
-            {event?.thresholds?.bronze || 10} tokens to claim a Bronze badge.
+            {event?.bronzeThreshold || 10} tokens for a Bronze badge.
           </p>
           <div className="redeem-balance">
             <span className="redeem-balance-label">Your Balance</span>
