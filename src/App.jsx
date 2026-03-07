@@ -3,6 +3,7 @@ import CheckIn from './pages/CheckIn'
 import Redeem from './pages/Redeem'
 import Verify from './pages/Verify'
 import Home from './pages/Home'
+import Organizer from './pages/Organizer'
 import './App.css'
 
 function App() {
@@ -11,7 +12,7 @@ function App() {
       <Routes>
         {/* Organizer routes — Dev 2 will fill these */}
         <Route path="/" element={<Home />} />
-        <Route path="/organizer" element={<h1 className="app-placeholder">🏫 Organizer Dashboard — Dev 2</h1>} />
+        <Route path="/organizer" element={<Organizer />} />
         <Route path="/organizer/event/:eventId" element={<h1 className="app-placeholder">📋 Manage Event — Dev 2</h1>} />
 
         {/* Participant routes — Dev 2 will fill these */}
