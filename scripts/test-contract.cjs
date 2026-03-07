@@ -9,6 +9,10 @@ const ABI = [
   "function getEvent(uint256 eventId) external view returns (address, string, uint256, uint256, uint256, uint256, uint256, uint256, bool)",
   "function getParticipant(uint256 eventId, address participant) external view returns (uint256, uint256, bool, string, string)",
   "function hasCheckedIn(uint256 eventId, uint256 checkpointId, address participant) external view returns (bool)",
+  "event EventCreated(uint256 indexed eventId, string eventName, address organizer)",
+  "event CheckedIn(uint256 indexed eventId, uint256 checkpointId, address participant, uint256 newBalance)",
+  "event BadgeClaimed(uint256 indexed eventId, address participant, string tier, string cid)",
+  "event EventEnded(uint256 indexed eventId)"
 ];
 
 const CONTRACT_ADDRESS = process.env.VITE_CONTRACT_ADDRESS;
@@ -43,7 +47,7 @@ async function main() {
 
   // Extract eventId from logs
   const iface = new ethers.Interface(ABI);
-  let eventId = "0";
+  let eventId = null;
   for (const log of receipt1.logs) {
     try {
       const parsed = iface.parseLog(log);
@@ -51,6 +55,10 @@ async function main() {
         eventId = parsed.args[0].toString();
       }
     } catch {}
+  }
+
+  if (eventId === null) {
+    throw new Error("Could not extract eventId from transaction logs");
   }
   console.log("Event ID:", eventId, "\n");
 
