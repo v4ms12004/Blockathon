@@ -1,12 +1,19 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getClient } from "../utils/xrpl";
-import { fetchFromIPFS, getIPFSImageUrl } from "../utils/pinata";
+import { getProvider } from "../utils/contract";
+import { fetchFromIPFS } from "../utils/pinata";
+import { ethers } from "ethers";
+import "./Verify.css";
+
+const ABI = [
+  "event BadgeClaimed(uint256 indexed eventId, address participant, string tier, string cid)",
+];
+
+const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
 
 export default function Verify() {
   const { txHash } = useParams();
   const [step, setStep] = useState("loading");
-  // loading | verified | error
   const [badgeData, setBadgeData] = useState(null);
   const [txData, setTxData] = useState(null);
   const [error, setError] = useState("");
@@ -14,44 +21,47 @@ export default function Verify() {
   useEffect(() => {
     async function verifyBadge() {
       try {
-        // Step 1 — Fetch transaction from XRPL
-        const client = await getClient();
-        const response = await client.request({
-          command: "tx",
-          transaction: txHash,
-        });
-        await client.disconnect();
+        const provider = getProvider();
 
-        const tx = response.result;
+        const receipt = await provider.getTransactionReceipt(txHash);
+        if (!receipt) throw new Error("Transaction not found on Sepolia.");
 
-        // Step 2 — Extract memo (CID)
-        const memos = tx.Memos;
-        if (!memos || memos.length === 0) {
-          throw new Error("No memo found in transaction.");
+        const block = await provider.getBlock(receipt.blockNumber);
+        const timestamp = new Date(block.timestamp * 1000).toLocaleString();
+
+        const iface = new ethers.Interface(ABI);
+        let parsedEvent = null;
+
+        for (const log of receipt.logs) {
+          try {
+            const parsed = iface.parseLog(log);
+            if (parsed?.name === "BadgeClaimed") parsedEvent = parsed;
+          } catch {}
         }
 
-        const memoHex = memos[0].Memo.MemoData;
-        const memoDecoded = JSON.parse(
-          Buffer.from(memoHex, "hex").toString("utf8")
-        );
+        if (!parsedEvent) {
+          throw new Error("No badge claim found in this transaction.");
+        }
+
+        const eventId = parsedEvent.args[0].toString();
+        const participant = parsedEvent.args[1];
+        const tier = parsedEvent.args[2];
+        const cid = parsedEvent.args[3];
 
         setTxData({
-          issuer: tx.Account,
-          recipient: tx.Destination,
-          timestamp: new Date(
-            (tx.date + 946684800) * 1000
-          ).toLocaleString(),
-          txHash: txHash,
-          tier: memoDecoded.badgeTier,
-          eventId: memoDecoded.eventId,
+          eventId,
+          participant,
+          tier,
+          cid,
+          timestamp,
+          txHash,
+          blockNumber: receipt.blockNumber,
+          contractAddress: CONTRACT_ADDRESS,
         });
 
-        // Step 3 — Fetch badge metadata from IPFS if CID exists
-        if (memoDecoded.cid) {
-          const ipfsResult = await fetchFromIPFS(memoDecoded.cid);
-          if (ipfsResult.success) {
-            setBadgeData(ipfsResult.data);
-          }
+        if (cid) {
+          const ipfsResult = await fetchFromIPFS(cid);
+          if (ipfsResult.success) setBadgeData(ipfsResult.data);
         }
 
         setStep("verified");
@@ -72,37 +82,26 @@ export default function Verify() {
   };
 
   return (
-    <div style={styles.container}>
+    <div className="verify-container">
       {step === "loading" && (
-        <div style={styles.card}>
-          <div style={styles.emoji}>⏳</div>
-          <h2 style={styles.title}>Verifying Badge...</h2>
-          <p style={styles.sub}>Reading transaction from XRPL</p>
+        <div className="verify-card">
+          <div className="verify-emoji">⏳</div>
+          <h2 className="verify-title">Verifying Badge...</h2>
+          <p className="verify-sub">Reading transaction from Sepolia</p>
         </div>
       )}
 
       {step === "verified" && txData && (
-        <div style={{ ...styles.card, borderColor: "#4ade80" }}>
-          {/* Verified header */}
-          <div style={styles.verifiedBadge}>
-            <span style={styles.checkmark}>✓</span>
-            <span style={styles.verifiedText}>Verified on XRPL</span>
+        <div className="verify-card success">
+          <div className="verify-badge">
+            <span className="verify-checkmark">✓</span>
+            <span className="verify-badge-text">Verified on Ethereum Sepolia</span>
           </div>
 
-          {/* Badge image */}
-          {badgeData?.imageCid && (
-            <img
-              src={getIPFSImageUrl(badgeData.imageCid)}
-              alt="badge"
-              style={styles.badgeImage}
-            />
-          )}
-
-          {/* Tier */}
           {txData.tier && (
             <div
+              className="verify-tier"
               style={{
-                ...styles.tierBadge,
                 background: `${tierColor[txData.tier]}22`,
                 color: tierColor[txData.tier],
                 borderColor: tierColor[txData.tier],
@@ -116,162 +115,83 @@ export default function Verify() {
             </div>
           )}
 
-          {/* Badge metadata */}
           {badgeData && (
-            <div style={styles.metaBox}>
-              <p style={styles.badgeName}>{badgeData.name}</p>
-              <p style={styles.badgeEvent}>{badgeData.eventName}</p>
+            <div className="verify-meta-box">
+              <p className="verify-badge-name">{badgeData.name}</p>
+              <p className="verify-badge-event">{badgeData.eventName}</p>
               {badgeData.description && (
-                <p style={styles.badgeDesc}>{badgeData.description}</p>
+                <p className="verify-badge-desc">{badgeData.description}</p>
               )}
             </div>
           )}
 
-          {/* On-chain details */}
-          <div style={styles.chainBox}>
-            <div style={styles.chainRow}>
-              <span style={styles.chainLabel}>Issued By</span>
-              <span style={styles.chainValue}>
-                {txData.issuer.slice(0, 6)}...{txData.issuer.slice(-6)}
+          <div className="verify-chain-box">
+            <div className="verify-chain-row">
+              <span className="verify-chain-label">Recipient</span>
+              <span className="verify-chain-value">
+                {txData.participant.slice(0, 6)}...{txData.participant.slice(-4)}
               </span>
             </div>
-            <div style={styles.chainRow}>
-              <span style={styles.chainLabel}>Recipient</span>
-              <span style={styles.chainValue}>
-                {txData.recipient.slice(0, 6)}...{txData.recipient.slice(-6)}
-              </span>
+            <div className="verify-chain-row">
+              <span className="verify-chain-label">Event ID</span>
+              <span className="verify-chain-value">#{txData.eventId}</span>
             </div>
-            <div style={styles.chainRow}>
-              <span style={styles.chainLabel}>Timestamp</span>
-              <span style={styles.chainValue}>{txData.timestamp}</span>
+            <div className="verify-chain-row">
+              <span className="verify-chain-label">Timestamp</span>
+              <span className="verify-chain-value">{txData.timestamp}</span>
             </div>
-            <div style={styles.chainRow}>
-              <span style={styles.chainLabel}>TX Hash</span>
-              <span style={styles.chainValue}>
+            <div className="verify-chain-row">
+              <span className="verify-chain-label">Block</span>
+              <span className="verify-chain-value">#{txData.blockNumber}</span>
+            </div>
+            <div className="verify-chain-row">
+              <span className="verify-chain-label">TX Hash</span>
+              <span className="verify-chain-value">
                 {txData.txHash.slice(0, 8)}...{txData.txHash.slice(-8)}
+              </span>
+            </div>
+            <div className="verify-chain-row">
+              <span className="verify-chain-label">Contract</span>
+              <span className="verify-chain-value">
+                {txData.contractAddress.slice(0, 6)}...{txData.contractAddress.slice(-4)}
               </span>
             </div>
           </div>
 
-          <p style={styles.footer}>
-            This badge is permanently recorded on the XRP Ledger and cannot
-            be tampered with.
+          {txData.cid && (
+            <a
+              href={`https://gateway.pinata.cloud/ipfs/${txData.cid}`}
+              target="_blank"
+              rel="noreferrer"
+              className="verify-link ipfs"
+            >
+              View Badge Metadata on IPFS ↗
+            </a>
+          )}
+
+          <a
+            href={`https://sepolia.etherscan.io/tx/${txData.txHash}`}
+            target="_blank"
+            rel="noreferrer"
+            className="verify-link etherscan"
+          >
+            View on Etherscan ↗
+          </a>
+
+          <p className="verify-footer">
+            This badge is permanently recorded on Ethereum Sepolia and cannot
+            be tampered with. Badge content is stored on IPFS via Pinata.
           </p>
         </div>
       )}
 
       {step === "error" && (
-        <div style={{ ...styles.card, borderColor: "#f87171" }}>
-          <div style={styles.emoji}>❌</div>
-          <h2 style={{ ...styles.title, color: "#f87171" }}>
-            Verification Failed
-          </h2>
-          <p style={styles.sub}>{error}</p>
+        <div className="verify-card error">
+          <div className="verify-emoji">❌</div>
+          <h2 className="verify-title error">Verification Failed</h2>
+          <p className="verify-sub">{error}</p>
         </div>
       )}
     </div>
   );
 }
-
-const styles = {
-  container: {
-    minHeight: "100vh",
-    background: "#050810",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "24px",
-    fontFamily: "sans-serif",
-  },
-  card: {
-    background: "#0d1117",
-    border: "1px solid #1e2736",
-    borderRadius: "20px",
-    padding: "40px 32px",
-    maxWidth: "400px",
-    width: "100%",
-    textAlign: "center",
-  },
-  emoji: { fontSize: "56px", marginBottom: "16px" },
-  title: {
-    color: "#e2e8f0",
-    fontSize: "22px",
-    fontWeight: "700",
-    marginBottom: "8px",
-  },
-  sub: { color: "#64748b", fontSize: "14px", marginBottom: "20px" },
-  verifiedBadge: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "8px",
-    background: "rgba(74,222,128,0.1)",
-    border: "1px solid #4ade80",
-    borderRadius: "20px",
-    padding: "6px 16px",
-    marginBottom: "24px",
-  },
-  checkmark: { color: "#4ade80", fontSize: "16px", fontWeight: "700" },
-  verifiedText: { color: "#4ade80", fontSize: "13px", fontWeight: "600" },
-  badgeImage: {
-    width: "100px",
-    height: "100px",
-    borderRadius: "50%",
-    objectFit: "cover",
-    marginBottom: "16px",
-    border: "3px solid #1e2736",
-  },
-  tierBadge: {
-    display: "inline-block",
-    border: "1px solid",
-    borderRadius: "20px",
-    padding: "6px 16px",
-    fontSize: "13px",
-    fontWeight: "700",
-    marginBottom: "20px",
-  },
-  metaBox: {
-    background: "#161b27",
-    borderRadius: "12px",
-    padding: "16px",
-    marginBottom: "16px",
-  },
-  badgeName: {
-    color: "#e2e8f0",
-    fontSize: "18px",
-    fontWeight: "700",
-    margin: "0 0 4px",
-  },
-  badgeEvent: { color: "#64748b", fontSize: "13px", margin: "0 0 8px" },
-  badgeDesc: { color: "#94a3b8", fontSize: "12px", margin: 0 },
-  chainBox: {
-    background: "#161b27",
-    borderRadius: "12px",
-    padding: "16px",
-    marginBottom: "16px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-  },
-  chainRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  chainLabel: {
-    color: "#64748b",
-    fontSize: "11px",
-    textTransform: "uppercase",
-    letterSpacing: "1px",
-  },
-  chainValue: {
-    color: "#e2e8f0",
-    fontSize: "12px",
-    fontFamily: "monospace",
-  },
-  footer: {
-    color: "#334155",
-    fontSize: "11px",
-    lineHeight: "1.5",
-    margin: 0,
-  },
-};

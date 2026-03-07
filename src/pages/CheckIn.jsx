@@ -1,46 +1,64 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { processCheckIn } from "../utils/checkin";
-import { getTokenBalance } from "../utils/xrpl";
-import { getWallet } from "../utils/wallet";
+import { checkInOnChain, getParticipantDetails } from "../utils/contract";
+import { sendTokens } from "../utils/xrpl";
+import { getOrCreateWallet } from "../utils/wallet";
+import "./CheckIn.css";
 
 export default function CheckIn() {
   const { eventId, checkpointId } = useParams();
-  const [status, setStatus] = useState("loading"); 
-  // loading | success | already | error
+  const [status, setStatus] = useState("loading");
   const [message, setMessage] = useState("");
   const [txHash, setTxHash] = useState("");
   const [balance, setBalance] = useState(null);
+  const [walletAddress, setWalletAddress] = useState("");
 
   useEffect(() => {
     async function handleCheckIn() {
-      setStatus("loading");
-      const result = await processCheckIn(checkpointId, eventId);
+      try {
+        setStatus("metamask");
+        if (!window.ethereum) {
+          setStatus("error");
+          setMessage("MetaMask not found. Please install MetaMask to check in.");
+          return;
+        }
 
-      if (result.success) {
-        setStatus("success");
-        setMessage(result.message);
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        const userAddress = accounts[0];
+        setWalletAddress(userAddress);
+
+        setStatus("processing");
+        const result = await checkInOnChain(eventId, checkpointId);
+
+        if (!result.success) {
+          if (result.error?.includes("Already checked in")) {
+            setStatus("already");
+            setMessage("You have already checked in at this checkpoint!");
+          } else {
+            setStatus("error");
+            setMessage(result.error || "Check-in failed. Please try again.");
+          }
+          const p = await getParticipantDetails(eventId, userAddress);
+          if (p.success) setBalance(p.participant.tokenBalance);
+          return;
+        }
+
         setTxHash(result.txHash);
 
-        // Fetch updated balance
-        const wallet = getWallet();
-        if (wallet) {
-          const bal = await getTokenBalance(wallet.address);
-          setBalance(bal);
-        }
-      } else if (result.reason === "ALREADY_CHECKED_IN") {
-        setStatus("already");
-        setMessage(result.message);
+        const wallet = getOrCreateWallet();
+        await sendTokens(wallet.address, 10, `checkpoint-${checkpointId}`, eventId);
 
-        // Still show balance
-        const wallet = getWallet();
-        if (wallet) {
-          const bal = await getTokenBalance(wallet.address);
-          setBalance(bal);
-        }
-      } else {
+        const p = await getParticipantDetails(eventId, userAddress);
+        if (p.success) setBalance(p.participant.tokenBalance);
+
+        setStatus("success");
+        setMessage("✅ Checked in! You earned 10 BLKPT tokens.");
+      } catch (err) {
+        console.error(err);
         setStatus("error");
-        setMessage(result.message);
+        setMessage(err.message || "Something went wrong.");
       }
     }
 
@@ -48,59 +66,67 @@ export default function CheckIn() {
   }, [eventId, checkpointId]);
 
   return (
-    <div style={styles.container}>
+    <div className="checkin-container">
+      {status === "metamask" && (
+        <div className="checkin-card">
+          <div className="checkin-emoji">🦊</div>
+          <h2 className="checkin-title">Connecting MetaMask...</h2>
+          <p className="checkin-sub">Please approve the connection in MetaMask</p>
+        </div>
+      )}
+
       {status === "loading" && (
-        <div style={styles.card}>
-          <div style={styles.spinner}>⏳</div>
-          <h2 style={styles.title}>Processing Check-in...</h2>
-          <p style={styles.sub}>Connecting to XRPL Testnet</p>
+        <div className="checkin-card">
+          <div className="checkin-emoji">⏳</div>
+          <h2 className="checkin-title">Processing Check-in...</h2>
+          <p className="checkin-sub">Connecting to blockchain</p>
+        </div>
+      )}
+
+      {status === "processing" && (
+        <div className="checkin-card">
+          <div className="checkin-emoji">⛓️</div>
+          <h2 className="checkin-title">Recording on Chain...</h2>
+          <p className="checkin-sub">Submitting to Sepolia + XRPL. This takes a few seconds.</p>
         </div>
       )}
 
       {status === "success" && (
-        <div style={{ ...styles.card, borderColor: "#4ade80" }}>
-          <div style={styles.emoji}>🎉</div>
-          <h2 style={{ ...styles.title, color: "#4ade80" }}>Checked In!</h2>
-          <p style={styles.sub}>{message}</p>
+        <div className="checkin-card success">
+          <div className="checkin-emoji">🎉</div>
+          <h2 className="checkin-title success">Checked In!</h2>
+          <p className="checkin-sub">{message}</p>
           {balance !== null && (
-            <div style={styles.balance}>
-              <span style={styles.balanceLabel}>Total Balance</span>
-              <span style={styles.balanceValue}>{balance} BLKPT</span>
+            <div className="checkin-balance">
+              <span className="checkin-balance-label">Total Balance</span>
+              <span className="checkin-balance-value">{balance} BLKPT</span>
             </div>
           )}
-          {txHash && (
-            <p style={styles.hash}>
-              TX: {txHash.slice(0, 8)}...{txHash.slice(-8)}
-            </p>
-          )}
+          {txHash && <p className="checkin-hash">TX: {txHash.slice(0, 8)}...{txHash.slice(-8)}</p>}
+          {walletAddress && <p className="checkin-hash">Wallet: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</p>}
         </div>
       )}
 
       {status === "already" && (
-        <div style={{ ...styles.card, borderColor: "#f59e0b" }}>
-          <div style={styles.emoji}>⚠️</div>
-          <h2 style={{ ...styles.title, color: "#f59e0b" }}>
-            Already Checked In
-          </h2>
-          <p style={styles.sub}>{message}</p>
+        <div className="checkin-card already">
+          <div className="checkin-emoji">⚠️</div>
+          <h2 className="checkin-title already">Already Checked In</h2>
+          <p className="checkin-sub">{message}</p>
           {balance !== null && (
-            <div style={styles.balance}>
-              <span style={styles.balanceLabel}>Current Balance</span>
-              <span style={styles.balanceValue}>{balance} BLKPT</span>
+            <div className="checkin-balance">
+              <span className="checkin-balance-label">Current Balance</span>
+              <span className="checkin-balance-value">{balance} BLKPT</span>
             </div>
           )}
         </div>
       )}
 
       {status === "error" && (
-        <div style={{ ...styles.card, borderColor: "#f87171" }}>
-          <div style={styles.emoji}>❌</div>
-          <h2 style={{ ...styles.title, color: "#f87171" }}>Check-in Failed</h2>
-          <p style={styles.sub}>{message}</p>
-          <button
-            style={styles.retryBtn}
-            onClick={() => window.location.reload()}
-          >
+        <div className="checkin-card error">
+          <div className="checkin-emoji">❌</div>
+          <h2 className="checkin-title error">Check-in Failed</h2>
+          <p className="checkin-sub">{message}</p>
+          <button className="checkin-retry-btn" onClick={() => window.location.reload()}>
             Try Again
           </button>
         </div>
@@ -108,56 +134,3 @@ export default function CheckIn() {
     </div>
   );
 }
-
-const styles = {
-  container: {
-    minHeight: "100vh",
-    background: "#050810",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "24px",
-    fontFamily: "sans-serif",
-  },
-  card: {
-    background: "#0d1117",
-    border: "1px solid #1e2736",
-    borderRadius: "20px",
-    padding: "40px 32px",
-    maxWidth: "360px",
-    width: "100%",
-    textAlign: "center",
-  },
-  spinner: { fontSize: "48px", marginBottom: "16px" },
-  emoji: { fontSize: "56px", marginBottom: "16px" },
-  title: {
-    color: "#e2e8f0",
-    fontSize: "22px",
-    fontWeight: "700",
-    marginBottom: "8px",
-  },
-  sub: { color: "#64748b", fontSize: "14px", marginBottom: "20px" },
-  balance: {
-    background: "#161b27",
-    borderRadius: "12px",
-    padding: "16px",
-    marginTop: "16px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "4px",
-  },
-  balanceLabel: { color: "#64748b", fontSize: "11px", textTransform: "uppercase", letterSpacing: "1px" },
-  balanceValue: { color: "#00e5ff", fontSize: "28px", fontWeight: "700" },
-  hash: { color: "#334155", fontSize: "11px", fontFamily: "monospace", marginTop: "12px" },
-  retryBtn: {
-    background: "#f87171",
-    color: "#fff",
-    border: "none",
-    borderRadius: "10px",
-    padding: "12px 24px",
-    fontSize: "14px",
-    fontWeight: "600",
-    cursor: "pointer",
-    marginTop: "8px",
-  },
-};
