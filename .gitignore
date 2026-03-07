@@ -24,4 +24,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+qr-codes/
+event-info.json
 
+artifacts
+cache
