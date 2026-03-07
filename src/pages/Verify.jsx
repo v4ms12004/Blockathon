@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getClient } from "../utils/xrpl";
 import { fetchFromIPFS, getIPFSImageUrl } from "../utils/pinata";
+import "./Verify.css";
 
 export default function Verify() {
   const { txHash } = useParams();
@@ -65,28 +66,22 @@ export default function Verify() {
     if (txHash) verifyBadge();
   }, [txHash]);
 
-  const tierColor = {
-    gold: "#f59e0b",
-    silver: "#94a3b8",
-    bronze: "#b45309",
-  };
-
   return (
-    <div style={styles.container}>
+    <div className="verify-container">
       {step === "loading" && (
-        <div style={styles.card}>
-          <div style={styles.emoji}>⏳</div>
-          <h2 style={styles.title}>Verifying Badge...</h2>
-          <p style={styles.sub}>Reading transaction from XRPL</p>
+        <div className="verify-card">
+          <div className="verify-emoji">⏳</div>
+          <h2 className="verify-title">Verifying Badge...</h2>
+          <p className="verify-sub">Reading transaction from XRPL</p>
         </div>
       )}
 
       {step === "verified" && txData && (
-        <div style={{ ...styles.card, borderColor: "#4ade80" }}>
+        <div className="verify-card verify-card--verified">
           {/* Verified header */}
-          <div style={styles.verifiedBadge}>
-            <span style={styles.checkmark}>✓</span>
-            <span style={styles.verifiedText}>Verified on XRPL</span>
+          <div className="verify-verified-badge">
+            <span className="verify-checkmark">✓</span>
+            <span className="verify-verified-text">Verified on XRPL</span>
           </div>
 
           {/* Badge image */}
@@ -94,19 +89,14 @@ export default function Verify() {
             <img
               src={getIPFSImageUrl(badgeData.imageCid)}
               alt="badge"
-              style={styles.badgeImage}
+              className="verify-badge-image"
             />
           )}
 
           {/* Tier */}
           {txData.tier && (
             <div
-              style={{
-                ...styles.tierBadge,
-                background: `${tierColor[txData.tier]}22`,
-                color: tierColor[txData.tier],
-                borderColor: tierColor[txData.tier],
-              }}
+              className={`verify-tier-badge verify-tier-badge--${txData.tier}`}
             >
               {txData.tier === "gold"
                 ? "🥇 Gold Badge"
@@ -118,42 +108,42 @@ export default function Verify() {
 
           {/* Badge metadata */}
           {badgeData && (
-            <div style={styles.metaBox}>
-              <p style={styles.badgeName}>{badgeData.name}</p>
-              <p style={styles.badgeEvent}>{badgeData.eventName}</p>
+            <div className="verify-meta-box">
+              <p className="verify-badge-name">{badgeData.name}</p>
+              <p className="verify-badge-event">{badgeData.eventName}</p>
               {badgeData.description && (
-                <p style={styles.badgeDesc}>{badgeData.description}</p>
+                <p className="verify-badge-desc">{badgeData.description}</p>
               )}
             </div>
           )}
 
           {/* On-chain details */}
-          <div style={styles.chainBox}>
-            <div style={styles.chainRow}>
-              <span style={styles.chainLabel}>Issued By</span>
-              <span style={styles.chainValue}>
+          <div className="verify-chain-box">
+            <div className="verify-chain-row">
+              <span className="verify-chain-label">Issued By</span>
+              <span className="verify-chain-value">
                 {txData.issuer.slice(0, 6)}...{txData.issuer.slice(-6)}
               </span>
             </div>
-            <div style={styles.chainRow}>
-              <span style={styles.chainLabel}>Recipient</span>
-              <span style={styles.chainValue}>
+            <div className="verify-chain-row">
+              <span className="verify-chain-label">Recipient</span>
+              <span className="verify-chain-value">
                 {txData.recipient.slice(0, 6)}...{txData.recipient.slice(-6)}
               </span>
             </div>
-            <div style={styles.chainRow}>
-              <span style={styles.chainLabel}>Timestamp</span>
-              <span style={styles.chainValue}>{txData.timestamp}</span>
+            <div className="verify-chain-row">
+              <span className="verify-chain-label">Timestamp</span>
+              <span className="verify-chain-value">{txData.timestamp}</span>
             </div>
-            <div style={styles.chainRow}>
-              <span style={styles.chainLabel}>TX Hash</span>
-              <span style={styles.chainValue}>
+            <div className="verify-chain-row">
+              <span className="verify-chain-label">TX Hash</span>
+              <span className="verify-chain-value">
                 {txData.txHash.slice(0, 8)}...{txData.txHash.slice(-8)}
               </span>
             </div>
           </div>
 
-          <p style={styles.footer}>
+          <p className="verify-footer">
             This badge is permanently recorded on the XRP Ledger and cannot
             be tampered with.
           </p>
@@ -161,117 +151,15 @@ export default function Verify() {
       )}
 
       {step === "error" && (
-        <div style={{ ...styles.card, borderColor: "#f87171" }}>
-          <div style={styles.emoji}>❌</div>
-          <h2 style={{ ...styles.title, color: "#f87171" }}>
+        <div className="verify-card verify-card--error">
+          <div className="verify-emoji">❌</div>
+          <h2 className="verify-title verify-title--error">
             Verification Failed
           </h2>
-          <p style={styles.sub}>{error}</p>
+          <p className="verify-sub">{error}</p>
         </div>
       )}
     </div>
   );
 }
 
-const styles = {
-  container: {
-    minHeight: "100vh",
-    background: "#050810",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "24px",
-    fontFamily: "sans-serif",
-  },
-  card: {
-    background: "#0d1117",
-    border: "1px solid #1e2736",
-    borderRadius: "20px",
-    padding: "40px 32px",
-    maxWidth: "400px",
-    width: "100%",
-    textAlign: "center",
-  },
-  emoji: { fontSize: "56px", marginBottom: "16px" },
-  title: {
-    color: "#e2e8f0",
-    fontSize: "22px",
-    fontWeight: "700",
-    marginBottom: "8px",
-  },
-  sub: { color: "#64748b", fontSize: "14px", marginBottom: "20px" },
-  verifiedBadge: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "8px",
-    background: "rgba(74,222,128,0.1)",
-    border: "1px solid #4ade80",
-    borderRadius: "20px",
-    padding: "6px 16px",
-    marginBottom: "24px",
-  },
-  checkmark: { color: "#4ade80", fontSize: "16px", fontWeight: "700" },
-  verifiedText: { color: "#4ade80", fontSize: "13px", fontWeight: "600" },
-  badgeImage: {
-    width: "100px",
-    height: "100px",
-    borderRadius: "50%",
-    objectFit: "cover",
-    marginBottom: "16px",
-    border: "3px solid #1e2736",
-  },
-  tierBadge: {
-    display: "inline-block",
-    border: "1px solid",
-    borderRadius: "20px",
-    padding: "6px 16px",
-    fontSize: "13px",
-    fontWeight: "700",
-    marginBottom: "20px",
-  },
-  metaBox: {
-    background: "#161b27",
-    borderRadius: "12px",
-    padding: "16px",
-    marginBottom: "16px",
-  },
-  badgeName: {
-    color: "#e2e8f0",
-    fontSize: "18px",
-    fontWeight: "700",
-    margin: "0 0 4px",
-  },
-  badgeEvent: { color: "#64748b", fontSize: "13px", margin: "0 0 8px" },
-  badgeDesc: { color: "#94a3b8", fontSize: "12px", margin: 0 },
-  chainBox: {
-    background: "#161b27",
-    borderRadius: "12px",
-    padding: "16px",
-    marginBottom: "16px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-  },
-  chainRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  chainLabel: {
-    color: "#64748b",
-    fontSize: "11px",
-    textTransform: "uppercase",
-    letterSpacing: "1px",
-  },
-  chainValue: {
-    color: "#e2e8f0",
-    fontSize: "12px",
-    fontFamily: "monospace",
-  },
-  footer: {
-    color: "#334155",
-    fontSize: "11px",
-    lineHeight: "1.5",
-    margin: 0,
-  },
-};
