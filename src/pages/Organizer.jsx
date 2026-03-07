@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import { generateQRData } from '../utils/qr'
+import { createEventOnChain } from '../utils/contract'
 import './Organizer.css'
 
 const STORAGE_KEY = 'blockbadge_events'
@@ -29,10 +31,13 @@ const defaultForm = {
 }
 
 export default function Organizer() {
+  const navigate = useNavigate()
   const [form, setForm] = useState(defaultForm)
   const [events, setEvents] = useState(loadEvents)
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [errors, setErrors] = useState({})
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(events))
@@ -55,7 +60,7 @@ export default function Organizer() {
     setErrors(err => ({ ...err, [name]: undefined }))
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     const errs = validate()
     if (Object.keys(errs).length) {
@@ -63,18 +68,38 @@ export default function Organizer() {
       return
     }
 
+    setSubmitting(true)
+    setSubmitError('')
+
     const thresholds = calcThresholds(form.totalCheckpoints, form.tokensPerCheckin)
+
+    const result = await createEventOnChain({
+      eventName: form.name,
+      totalParticipants: form.totalParticipants,
+      totalCheckpoints: form.totalCheckpoints,
+      tokensPerCheckin: form.tokensPerCheckin,
+      ...thresholds,
+    })
+
+    setSubmitting(false)
+
+    if (!result.success) {
+      setSubmitError(result.error || 'Transaction failed. Please try again.')
+      return
+    }
+
     const newEvent = {
-      id: `evt_${Date.now()}`,
+      id: result.eventId,
       ...form,
       ...thresholds,
+      txHash: result.txHash,
       createdAt: Date.now(),
     }
 
     setEvents(prev => [newEvent, ...prev])
-    setSelectedEvent(newEvent)
     setForm(defaultForm)
     setErrors({})
+    navigate(`/organizer/event/${result.eventId}`)
   }
 
   function handleDelete(eventId) {
@@ -160,8 +185,12 @@ export default function Organizer() {
             )
           })()}
 
-          <button className="org-submit-btn" type="submit">
-            Create Event
+          {submitError && (
+            <p className="org-submit-error">{submitError}</p>
+          )}
+
+          <button className="org-submit-btn" type="submit" disabled={submitting}>
+            {submitting ? 'Confirm in MetaMask...' : 'Create Event'}
           </button>
         </form>
 

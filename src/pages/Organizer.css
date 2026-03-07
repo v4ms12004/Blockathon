@@ -158,8 +158,23 @@
   transition: opacity 0.2s;
 }
 
-.org-submit-btn:hover {
+.org-submit-btn:hover:not(:disabled) {
   opacity: 0.85;
+}
+
+.org-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.org-submit-error {
+  font-size: 13px;
+  color: #f87171;
+  background: #1a0a0a;
+  border: 1px solid #f8717133;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 0;
 }
 
 /* ── Event list ──────────────────────────────────────────────── */

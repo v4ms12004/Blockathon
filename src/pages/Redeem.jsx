@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getTokenBalance, redeemBadge } from "../utils/xrpl";
-import { getWallet } from "../utils/wallet";
-import { getBadgeTierForEvent, getEvent } from "../utils/eventStore";
-import { fetchFromIPFS, getIPFSImageUrl } from "../utils/pinata";
+import { getEventDetails, getParticipantDetails, claimBadgeOnChain } from "../utils/contract";
+import { pinBadgeMetadata, getIPFSImageUrl } from "../utils/pinata";
 import "./Redeem.css";
 
 export default function Redeem() {
@@ -16,14 +14,9 @@ export default function Redeem() {
   const [event, setEvent] = useState(null);
   const [txHash, setTxHash] = useState("");
   const [badgeCID, setBadgeCID] = useState("");
+  const [badgeData, setBadgeData] = useState(null);
   const [error, setError] = useState("");
   const [userAddress, setUserAddress] = useState("");
-
-  const tierColor = {
-    gold: "#f59e0b",
-    silver: "#94a3b8",
-    bronze: "#b45309",
-  };
 
   useEffect(() => {
     async function loadEligibility() {
@@ -116,6 +109,8 @@ export default function Redeem() {
         recipient: userAddress,
         eventId: eventId,
       };
+
+      setBadgeData(metadata);
 
       const pinResult = await pinBadgeMetadata(metadata);
       if (!pinResult.success) {
