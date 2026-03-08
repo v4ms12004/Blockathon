@@ -47,8 +47,9 @@ export default function CheckIn() {
 
         setTxHash(result.txHash);
 
-        const wallet = getOrCreateWallet();
-        await sendTokens(wallet.address, 10, `checkpoint-${checkpointId}`, eventId);
+        const wallet = await getOrCreateWallet();
+        console.log("wallet object:", wallet);
+        await sendTokens(wallet.address, 10, `checkpoint-${checkpointId}`, eventId, wallet.seed);
 
         const p = await getParticipantDetails(eventId, userAddress);
         if (p.success) setBalance(p.participant.tokenBalance);

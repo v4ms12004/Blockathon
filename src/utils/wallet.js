@@ -4,13 +4,24 @@ const WALLET_KEY = "blockbadge_wallet";
 const CHECKINS_KEY = "blockbadge_checkins";
 
 // ─── Get existing wallet or create new one ─────────────────────
-export function getOrCreateWallet() {
+export async function getOrCreateWallet() {
   const existing = localStorage.getItem(WALLET_KEY);
   if (existing) {
     return JSON.parse(existing);
   }
+
+  // Generate new wallet
   const newWallet = generateWallet();
   localStorage.setItem(WALLET_KEY, JSON.stringify(newWallet));
+
+  // Fund it and setup trustline automatically
+  try {
+    const { setupTrustline } = await import('./xrpl.js');
+    await setupTrustline(newWallet.address, newWallet.seed);
+  } catch (err) {
+    console.warn("Auto trustline setup failed:", err.message);
+  }
+
   return newWallet;
 }
 

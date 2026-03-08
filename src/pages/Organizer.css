@@ -446,3 +446,34 @@
   margin-top: 6px;
   line-height: 1.4;
 }
+
+.org-page {
+  min-height: 100vh;
+  background: #050810;
+}
+
+.org-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 16px 24px 0;
+  border-bottom: 1px solid #1e2736;
+  background: #0d1117;
+}
+
+.org-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 20px;
+  cursor: pointer;
+  margin-bottom: -1px;
+  transition: color 0.2s;
+}
+
+.org-tab--active {
+  color: #00e5ff;
+  border-bottom-color: #00e5ff;
+}

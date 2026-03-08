@@ -1,0 +1,205 @@
+.ledger-center {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.ledger-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #1e2736;
+  border-top-color: #00e5ff;
+  border-radius: 50%;
+  animation: ledger-spin 0.8s linear infinite;
+}
+
+@keyframes ledger-spin {
+  to { transform: rotate(360deg); }
+}
+
+.ledger-loading-text {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.ledger-error-icon { font-size: 40px; }
+
+.ledger-error-text {
+  color: #f87171;
+  font-size: 14px;
+  text-align: center;
+  max-width: 300px;
+}
+
+.ledger-retry-btn {
+  background: #1e2736;
+  color: #e2e8f0;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.ledger-page {
+  padding: 32px;
+  max-width: 900px;
+  margin: 0 auto;
+  font-family: sans-serif;
+}
+
+.ledger-header {
+  margin-bottom: 32px;
+}
+
+.ledger-xrpl-badge {
+  display: inline-block;
+  background: rgba(0, 229, 255, 0.1);
+  border: 1px solid #00e5ff;
+  border-radius: 20px;
+  padding: 4px 12px;
+  color: #00e5ff;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.ledger-title {
+  color: #e2e8f0;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.ledger-subtitle {
+  color: #64748b;
+  font-size: 14px;
+  margin: 0;
+}
+
+.ledger-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.ledger-stat-card {
+  background: #0d1117;
+  border: 1px solid #1e2736;
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+}
+
+.ledger-stat-label {
+  color: #64748b;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 8px;
+}
+
+.ledger-stat-value {
+  font-size: 36px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.ledger-stat-value--cyan   { color: #00e5ff; }
+.ledger-stat-value--green  { color: #4ade80; }
+.ledger-stat-value--purple { color: #a78bfa; }
+.ledger-stat-value--gold   { color: #f59e0b; }
+
+.ledger-stat-unit {
+  color: #334155;
+  font-size: 11px;
+  margin: 4px 0 0;
+}
+
+.ledger-section {
+  background: #0d1117;
+  border: 1px solid #1e2736;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.ledger-section-title {
+  color: #e2e8f0;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 20px;
+}
+
+.ledger-empty {
+  color: #64748b;
+  font-size: 14px;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.ledger-checkpoint-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ledger-checkpoint-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ledger-checkpoint-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+}
+
+.ledger-checkpoint-name {
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ledger-checkpoint-count {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.ledger-checkpoint-bar-track {
+  flex: 1;
+  height: 8px;
+  background: #1e2736;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ledger-checkpoint-bar-fill {
+  height: 100%;
+  background: #00e5ff;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.ledger-checkpoint-tokens {
+  color: #00e5ff;
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 70px;
+  text-align: right;
+}
+
+.ledger-refresh-btn {
+  background: #1e2736;
+  color: #e2e8f0;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-size: 14px;
+  cursor: pointer;
+}
