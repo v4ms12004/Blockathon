@@ -31,9 +31,22 @@ export default function ManageEvent() {
     fetchEvent()
   }, [eventId])
 
+  const [confirmStep, setConfirmStep] = useState(0) // 0=idle, 1=first confirm, 2=second confirm
+
   async function handleEndEvent() {
+    if (confirmStep === 0) {
+      setConfirmStep(1)
+      return
+    }
+    if (confirmStep === 1) {
+      setConfirmStep(2)
+      return
+    }
+
+    // confirmStep === 2 — actually end the event
     setEnding(true)
     setEndError(null)
+    setConfirmStep(0)
     const result = await endEventOnChain(eventId)
     if (result.success) {
       setEndTxHash(result.txHash)
@@ -108,21 +121,73 @@ export default function ManageEvent() {
 
         {event.isActive && (
           <div className="me-end-section">
-            <button
-              className="me-end-btn"
-              onClick={handleEndEvent}
-              disabled={ending}
-            >
-              {ending ? 'Ending Event…' : 'End Event'}
-            </button>
+            <p className="me-end-section-label">⚠️ Danger Zone</p>
+            <p className="me-end-section-sub">
+              Ending the event is permanent. Participants will be able to claim badges.
+            </p>
+
+            {confirmStep === 0 && (
+              <button
+                className="me-end-btn"
+                onClick={handleEndEvent}
+                disabled={ending}
+              >
+                End Event
+              </button>
+            )}
+
+            {confirmStep === 1 && (
+              <div className="me-confirm-box">
+                <p className="me-confirm-text">
+                  ⚠️ Are you sure you want to end <strong>{event.eventName}</strong>?
+                </p>
+                <div className="me-confirm-row">
+                  <button className="me-confirm-yes" onClick={handleEndEvent}>
+                    Yes, continue
+                  </button>
+                  <button className="me-confirm-no" onClick={() => setConfirmStep(0)}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {confirmStep === 2 && (
+              <div className="me-confirm-box me-confirm-box--final">
+                <p className="me-confirm-text">
+                  🛑 This is your final confirmation. This action <strong>cannot be undone</strong>.
+                </p>
+                <div className="me-confirm-row">
+                  <button className="me-confirm-final" onClick={handleEndEvent}>
+                    End Event Permanently
+                  </button>
+                  <button className="me-confirm-no" onClick={() => setConfirmStep(0)}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {ending && (
+              <p className="me-status-text">⏳ Submitting to Sepolia...</p>
+            )}
+
             {endError && <p className="me-end-error">{endError}</p>}
           </div>
         )}
 
         {endTxHash && (
           <div className="me-end-success">
-            <p className="me-end-success-label">Event ended</p>
-            <p className="me-end-success-hash">{endTxHash}</p>
+            <p className="me-end-success-label">✅ Event Ended</p>
+            <p className="me-end-success-sub">Participants can now claim their badges.</p>
+            <a
+              href={`https://sepolia.etherscan.io/tx/${endTxHash}`}
+              target="_blank"
+              rel="noreferrer"
+              className="me-end-etherscan"
+            >
+              View on Etherscan ↗
+            </a>
           </div>
         )}
       </aside>
