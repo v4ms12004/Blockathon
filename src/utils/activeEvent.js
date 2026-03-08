@@ -1,11 +1,16 @@
-// Automatically reads the active event ID from event-info.json
-// Falls back to VITE_ACTIVE_EVENT_ID in .env if file not found
-
 let cachedEventId = null;
 
 export async function getActiveEventId() {
   if (cachedEventId) return cachedEventId;
 
+  // 1. Check localStorage first (set by browser create event flow)
+  const localEventId = localStorage.getItem('blockbadge_active_event_id');
+  if (localEventId) {
+    cachedEventId = localEventId;
+    return cachedEventId;
+  }
+
+  // 2. Try public/event-info.json (set by create-event.cjs)
   try {
     const response = await fetch("/event-info.json");
     if (response.ok) {
@@ -15,24 +20,23 @@ export async function getActiveEventId() {
         return cachedEventId;
       }
     }
-  } catch (err) {
-    console.warn("Could not load event-info.json, falling back to .env");
-  }
+  } catch {}
 
-  // Fallback to .env
+  // 3. Fallback to .env
   const envEventId = import.meta.env.VITE_ACTIVE_EVENT_ID;
   if (envEventId) {
     cachedEventId = envEventId;
     return cachedEventId;
   }
 
-  throw new Error("No active event ID found. Run create-event.cjs first.");
-}
-
-export function clearCachedEventId() {
-  cachedEventId = null;
+  throw new Error("No active event ID found.");
 }
 
 export function setActiveEventId(id) {
   cachedEventId = id;
+  localStorage.setItem('blockbadge_active_event_id', id);
+}
+
+export function clearCachedEventId() {
+  cachedEventId = null;
 }
