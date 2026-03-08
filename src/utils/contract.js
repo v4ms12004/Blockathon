@@ -10,6 +10,7 @@ const ABI = [
   "function getParticipant(uint256 eventId, address participant) external view returns (uint256, uint256, bool, string, string, uint256)",
   "function hasCheckedIn(uint256 eventId, uint256 checkpointId, address participant) external view returns (bool)",
   "function getParticipants(uint256 eventId) external view returns (address[])",
+  "function getParticipantEvents(address participant) external view returns (uint256[])",
   "function getNFTTokenURI(uint256 tokenId) external view returns (string)",
   "function tokenURI(uint256 tokenId) external view returns (string)",
   "event EventCreated(uint256 indexed eventId, string eventName, address organizer)",
@@ -197,5 +198,17 @@ export async function hasCheckedInOnChain(eventId, checkpointId, address) {
   } catch (err) {
     console.error("hasCheckedIn error:", err);
     return false;
+  }
+}
+
+// ── Get all events a participant has joined ────────────────────
+export async function getParticipantEvents(address) {
+  try {
+    const contract = getContract();
+    const result = await contract.getParticipantEvents(address);
+    return { success: true, eventIds: result.map(id => id.toString()) };
+  } catch (err) {
+    console.error("getParticipantEvents error:", err);
+    return { success: false, error: err.message, eventIds: [] };
   }
 }
