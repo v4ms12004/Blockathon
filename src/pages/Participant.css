@@ -179,7 +179,7 @@
 }
 
 /* ── Check-in Progress Card ────────────────────────────────── */
-.checkin-card {
+.progress-card {
   background: #0d1117;
   border: 1px solid #1e2736;
   border-radius: 16px;
@@ -187,15 +187,16 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  width: 100%;
 }
 
-.checkin-header {
+.progress-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.checkin-title {
+.progress-title {
   font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
@@ -203,7 +204,7 @@
   color: #64748b;
 }
 
-.checkin-count {
+.progress-count {
   font-size: 14px;
   font-weight: 700;
   color: #e2e8f0;
@@ -215,6 +216,7 @@
   background: #161b27;
   border-radius: 100px;
   overflow: hidden;
+  display: block;
 }
 
 .progress-bar-fill {

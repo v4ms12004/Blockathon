@@ -269,10 +269,10 @@ export default function Participant() {
         </div>
 
         {/* Check-in Progress */}
-        <div className="checkin-card">
-          <div className="checkin-header">
-            <span className="checkin-title">Check-in Progress</span>
-            <span className="checkin-count">{checkinCount} / {totalCheckpoints} checkpoints</span>
+        <div className="progress-card">
+          <div className="progress-header">
+            <span className="progress-title">Check-in Progress</span>
+            <span className="progress-count">{checkinCount} / {totalCheckpoints} checkpoints</span>
           </div>
           <div className="progress-bar-track">
             <div

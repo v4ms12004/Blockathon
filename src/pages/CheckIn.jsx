@@ -54,8 +54,8 @@ export default function CheckIn() {
 
         setTxHash(result.txHash);
 
-        const wallet = getOrCreateWallet();
-        await sendTokens(wallet.address, tokensPerCheckin, `checkpoint-${checkpointId}`, eventId);
+        const wallet = await getOrCreateWallet();
+        await sendTokens(wallet.address, tokensPerCheckin, `checkpoint-${checkpointId}`, eventId, wallet.seed);
 
         const p = await getParticipantDetails(eventId, userAddress);
         if (p.success) setBalance(p.participant.tokenBalance);
@@ -98,6 +98,9 @@ export default function CheckIn() {
               TX: {txHash.slice(0, 8)}...{txHash.slice(-8)}
             </p>
           )}
+          <a className="checkin-dashboard-link" href="/participant">
+            View My Dashboard →
+          </a>
         </div>
       )}
 
@@ -114,6 +117,9 @@ export default function CheckIn() {
               <span className="checkin-balance-value">{balance} BLKPT</span>
             </div>
           )}
+          <a className="checkin-dashboard-link" href="/participant">
+            View My Dashboard →
+          </a>
         </div>
       )}
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getProvider } from "../utils/contract";
-import { fetchFromIPFS } from "../utils/pinata";
+import { fetchFromIPFS, getIPFSImageUrl } from "../utils/pinata";
 import { ethers } from "ethers";
 import "./Verify.css";
 
@@ -33,26 +33,16 @@ export default function Verify() {
         let parsedEvent = null;
 
         for (const log of receipt.logs) {
-        console.log("Log address:", log.address);
-        console.log("Log topics:", log.topics);
-        try {
-          const parsed = iface.parseLog({ topics: log.topics, data: log.data });
-          console.log("Parsed:", parsed);
-          if (parsed?.name === "BadgeClaimed") parsedEvent = parsed;
-        } catch (e) {
-          console.log("Parse error:", e.message);
+          try {
+            const parsed = iface.parseLog({ topics: log.topics, data: log.data });
+            if (parsed?.name === "BadgeClaimed") parsedEvent = parsed;
+          } catch (e) {}
         }
-      }
-
-        // Debug — remove after fix
-        console.log("Total logs:", receipt.logs.length);
-        console.log("Parsed event:", parsedEvent);
 
         if (!parsedEvent) {
           throw new Error("No badge claim found in this transaction.");
         }
 
-        console.log("Args:", parsedEvent.args);
         const eventId = parsedEvent.args[0].toString();
         const participant = parsedEvent.args[1];
         const tier = parsedEvent.args[2];
@@ -60,17 +50,17 @@ export default function Verify() {
         const tokenId = parsedEvent.args[4]?.toString() || "0";
 
         setTxData({
-        issuer: CONTRACT_ADDRESS || "unknown",
-        recipient: participant,
-        tier,
-        cid,
-        tokenId,
-        timestamp,
-        txHash,
-        blockNumber: receipt.blockNumber,
-        contractAddress: CONTRACT_ADDRESS || "unknown",
-        eventId,
-      });
+          issuer: CONTRACT_ADDRESS || "unknown",
+          recipient: participant,
+          tier,
+          cid,
+          tokenId,
+          timestamp,
+          txHash,
+          blockNumber: receipt.blockNumber,
+          contractAddress: CONTRACT_ADDRESS || "unknown",
+          eventId,
+        });
 
         if (cid) {
           const ipfsResult = await fetchFromIPFS(cid);
@@ -94,16 +84,24 @@ export default function Verify() {
         <div className="verify-card">
           <div className="verify-emoji">⏳</div>
           <h2 className="verify-title">Verifying Badge...</h2>
-          <p className="verify-sub">Reading transaction from XRPL</p>
+          <p className="verify-sub">Reading transaction from Ethereum Sepolia</p>
         </div>
       )}
 
       {step === "verified" && txData && (
         <div className="verify-card verify-card--verified">
-          {/* Verified header */}
-          <div className="verify-verified-badge">
-            <span className="verify-checkmark">✓</span>
-            <span className="verify-verified-text">Verified on XRPL</span>
+
+          {/* Badges row — same size capsules */}
+          <div className="verify-badges-row">
+            <div className="verify-verified-badge">
+              <span className="verify-checkmark">✓</span>
+              <span className="verify-verified-text">Verified on XRPL</span>
+            </div>
+            {txData.tier && (
+              <div className={`verify-tier-badge verify-tier-badge--${txData.tier}`}>
+                {txData.tier === "gold" ? "🥇 Gold" : txData.tier === "silver" ? "🥈 Silver" : "🥉 Bronze"}
+              </div>
+            )}
           </div>
 
           {/* Badge image */}
@@ -115,19 +113,7 @@ export default function Verify() {
             />
           )}
 
-          {/* Tier */}
-          {txData.tier && (
-            <div
-              className={`verify-tier-badge verify-tier-badge--${txData.tier}`}
-            >
-              {txData.tier === "gold"
-                ? "🥇 Gold Badge"
-                : txData.tier === "silver"
-                ? "🥈 Silver Badge"
-                : "🥉 Bronze Badge"}
-            </div>
-          )}
-
+          {/* Badge metadata */}
           {badgeData && (
             <div className="verify-meta-box">
               <p className="verify-badge-name">{badgeData.name}</p>
@@ -163,6 +149,10 @@ export default function Verify() {
               </span>
             </div>
             <div className="verify-chain-row">
+              <span className="verify-chain-label">Block</span>
+              <span className="verify-chain-value">#{txData.blockNumber}</span>
+            </div>
+            <div className="verify-chain-row">
               <span className="verify-chain-label">Contract</span>
               <span className="verify-chain-value">
                 {txData.contractAddress.slice(0, 6)}...{txData.contractAddress.slice(-4)}
@@ -170,9 +160,18 @@ export default function Verify() {
             </div>
           </div>
 
+          {/* Etherscan link */}
+          <a
+            href={`https://sepolia.etherscan.io/tx/${txHash}`}
+            target="_blank"
+            rel="noreferrer"
+            className="verify-etherscan-link"
+          >
+            View on Etherscan ↗
+          </a>
+
           <p className="verify-footer">
-            This badge is permanently recorded on the XRP Ledger and cannot
-            be tampered with.
+            This badge is permanently recorded on Ethereum Sepolia and cannot be tampered with.
           </p>
         </div>
       )}
@@ -180,13 +179,10 @@ export default function Verify() {
       {step === "error" && (
         <div className="verify-card verify-card--error">
           <div className="verify-emoji">❌</div>
-          <h2 className="verify-title verify-title--error">
-            Verification Failed
-          </h2>
+          <h2 className="verify-title verify-title--error">Verification Failed</h2>
           <p className="verify-sub">{error}</p>
         </div>
       )}
     </div>
   );
 }
-
