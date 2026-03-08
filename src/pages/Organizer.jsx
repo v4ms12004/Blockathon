@@ -1,19 +1,9 @@
-//The organizer will enter the event details here which will be used in the create-event script to generate the QR codes and save the event info. 
-// The organizer page will also display the generated QR codes for the event and allow the organizer to manage their events.
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
+import { createEventOnChain } from '../utils/contract'
 import { generateQRData } from '../utils/qr'
 import './Organizer.css'
-
-const STORAGE_KEY = 'blockbadge_events'
-
-function loadEvents() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
-  } catch {
-    return []
-  }
-}
 
 function calcThresholds(totalCheckpoints, tokensPerCheckin) {
   return {
@@ -25,20 +15,18 @@ function calcThresholds(totalCheckpoints, tokensPerCheckin) {
 
 const defaultForm = {
   name: '',
-  totalParticipants: '',
-  totalCheckpoints: '',
+  totalParticipants: 50,
+  totalCheckpoints: 3,
   tokensPerCheckin: 10,
 }
 
 export default function Organizer() {
+  const navigate = useNavigate()
   const [form, setForm] = useState(defaultForm)
-  const [events, setEvents] = useState(loadEvents)
-  const [selectedEvent, setSelectedEvent] = useState(null)
   const [errors, setErrors] = useState({})
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(events))
-  }, [events])
+  const [status, setStatus] = useState('idle') // idle | deploying | success | error
+  const [deployedEvent, setDeployedEvent] = useState(null)
+  const [errorMsg, setErrorMsg] = useState('')
 
   function validate() {
     const e = {}
@@ -57,50 +45,84 @@ export default function Organizer() {
     setErrors(err => ({ ...err, [name]: undefined }))
   }
 
-  function handleSubmit(e) {
-    e.preventDefault()
+  async function handleDeploy() {
+    if (!window.ethereum) {
+      setErrorMsg('MetaMask is not installed. Please install MetaMask.')
+      setStatus('error')
+      return
+    }
+
     const errs = validate()
     if (Object.keys(errs).length) {
       setErrors(errs)
       return
     }
 
-    const thresholds = calcThresholds(form.totalCheckpoints, form.tokensPerCheckin)
-    const newEvent = {
-      id: `evt_${Date.now()}`,
-      ...form,
-      ...thresholds,
-      createdAt: Date.now(),
+    const thresholds = calcThresholds(
+      Number(form.totalCheckpoints),
+      Number(form.tokensPerCheckin)
+    )
+
+    setStatus('deploying')
+    setErrorMsg('')
+
+    const result = await createEventOnChain({
+      eventName: form.name,
+      totalParticipants: Number(form.totalParticipants),
+      totalCheckpoints: Number(form.totalCheckpoints),
+      tokensPerCheckin: Number(form.tokensPerCheckin),
+      goldThreshold: thresholds.goldThreshold,
+      silverThreshold: thresholds.silverThreshold,
+      bronzeThreshold: thresholds.bronzeThreshold,
+    })
+
+    if (!result.success) {
+      setErrorMsg(result.error || 'Deployment failed. Please try again.')
+      setStatus('error')
+      return
     }
 
-    setEvents(prev => [newEvent, ...prev])
-    setSelectedEvent(newEvent)
-    setForm(defaultForm)
-    setErrors({})
+    setDeployedEvent({
+      eventId: result.eventId,
+      txHash: result.txHash,
+      name: form.name,
+      totalCheckpoints: Number(form.totalCheckpoints),
+      tokensPerCheckin: Number(form.tokensPerCheckin),
+      ...thresholds,
+    })
+    setStatus('success')
   }
 
-  function handleDelete(eventId) {
-    setEvents(prev => prev.filter(ev => ev.id !== eventId))
-    if (selectedEvent?.id === eventId) setSelectedEvent(null)
-  }
+  const thresholdPreview = calcThresholds(
+    Number(form.totalCheckpoints) || 0,
+    Number(form.tokensPerCheckin) || 0
+  )
 
   return (
     <div className="org-layout">
       {/* ── Left panel: form ── */}
       <aside className="org-sidebar">
         <h1 className="org-sidebar-title">Organizer Dashboard</h1>
-        <p className="org-sidebar-sub">Create a new event to generate check-in QR codes.</p>
+        <p className="org-sidebar-sub">Deploy a new event to Ethereum Sepolia.</p>
 
-        <form className="org-form" onSubmit={handleSubmit} noValidate>
+        {/* MetaMask warning */}
+        {!window.ethereum && (
+          <div className="org-metamask-warning">
+            ⚠️ MetaMask not detected. Please install MetaMask to deploy events.
+          </div>
+        )}
+
+        <div className="org-form">
           <div className="org-field">
             <label className="org-label">Event Name</label>
             <input
               className={`org-input${errors.name ? ' org-input--error' : ''}`}
               name="name"
               type="text"
-              placeholder="e.g. Blockathon 2026"
+              placeholder="e.g. Block-a-Thon KU 2026"
               value={form.name}
               onChange={handleChange}
+              disabled={status === 'deploying'}
             />
             {errors.name && <span className="org-error">{errors.name}</span>}
           </div>
@@ -113,9 +135,9 @@ export default function Organizer() {
                 name="totalParticipants"
                 type="number"
                 min="1"
-                placeholder="100"
                 value={form.totalParticipants}
                 onChange={handleChange}
+                disabled={status === 'deploying'}
               />
               {errors.totalParticipants && <span className="org-error">{errors.totalParticipants}</span>}
             </div>
@@ -127,9 +149,9 @@ export default function Organizer() {
                 name="totalCheckpoints"
                 type="number"
                 min="1"
-                placeholder="5"
                 value={form.totalCheckpoints}
                 onChange={handleChange}
+                disabled={status === 'deploying'}
               />
               {errors.totalCheckpoints && <span className="org-error">{errors.totalCheckpoints}</span>}
             </div>
@@ -144,87 +166,115 @@ export default function Organizer() {
               min="1"
               value={form.tokensPerCheckin}
               onChange={handleChange}
+              disabled={status === 'deploying'}
             />
             {errors.tokensPerCheckin && <span className="org-error">{errors.tokensPerCheckin}</span>}
           </div>
 
-          {form.totalCheckpoints >= 1 && form.tokensPerCheckin >= 1 && (() => {
-            const t = calcThresholds(Number(form.totalCheckpoints), Number(form.tokensPerCheckin))
-            return (
-              <div className="org-threshold-preview">
-                <p className="org-threshold-preview-label">Auto-calculated badge thresholds</p>
-                <div className="org-threshold-preview-row">
-                  <span className="org-badge org-badge--gold">Gold: {t.goldThreshold}+ tokens</span>
-                  <span className="org-badge org-badge--silver">Silver: {t.silverThreshold}+ tokens</span>
-                  <span className="org-badge org-badge--bronze">Bronze: {t.bronzeThreshold}+ tokens</span>
-                </div>
+          {form.totalCheckpoints >= 1 && form.tokensPerCheckin >= 1 && (
+            <div className="org-threshold-preview">
+              <p className="org-threshold-preview-label">Auto-calculated badge thresholds</p>
+              <div className="org-threshold-preview-row">
+                <span className="org-badge org-badge--gold">🥇 Gold: {thresholdPreview.goldThreshold}+ tokens</span>
+                <span className="org-badge org-badge--silver">🥈 Silver: {thresholdPreview.silverThreshold}+ tokens</span>
+                <span className="org-badge org-badge--bronze">🥉 Bronze: {thresholdPreview.bronzeThreshold}+ tokens</span>
               </div>
-            )
-          })()}
+            </div>
+          )}
 
-          <button className="org-submit-btn" type="submit">
-            Create Event
+          {status === 'error' && (
+            <div className="org-error-box">⚠️ {errorMsg}</div>
+          )}
+
+          <button
+            className="org-submit-btn"
+            onClick={handleDeploy}
+            disabled={status === 'deploying'}
+          >
+            {status === 'deploying' ? '⏳ Deploying to Sepolia...' : '🚀 Deploy Event to Blockchain'}
           </button>
-        </form>
-
-        {/* Event list */}
-        {events.length > 0 && (
-          <div className="org-event-list">
-            <h3 className="org-event-list-title">Your Events</h3>
-            {events.map(ev => (
-              <div
-                key={ev.id}
-                className={`org-event-item${selectedEvent?.id === ev.id ? ' org-event-item--active' : ''}`}
-                onClick={() => setSelectedEvent(ev)}
-              >
-                <span className="org-event-item-name">{ev.name}</span>
-                <span className="org-event-item-meta">{ev.totalCheckpoints} checkpoints</span>
-              </div>
-            ))}
-          </div>
-        )}
+        </div>
       </aside>
 
       {/* ── Right panel: QR codes ── */}
       <main className="org-main">
-        {!selectedEvent ? (
+        {status === 'idle' && (
           <div className="org-empty">
-            <div className="org-empty-icon">&#128197;</div>
-            <p className="org-empty-text">Create an event to see its check-in QR codes here.</p>
+            <div className="org-empty-icon">📋</div>
+            <p className="org-empty-text">Fill in the form and deploy your event to generate check-in QR codes.</p>
           </div>
-        ) : (
+        )}
+
+        {status === 'deploying' && (
+          <div className="org-empty">
+            <div className="org-empty-icon">⛓️</div>
+            <p className="org-empty-text">Deploying to Ethereum Sepolia...</p>
+            <p className="org-empty-subtext">Please approve the transaction in MetaMask</p>
+          </div>
+        )}
+
+        {status === 'error' && (
+          <div className="org-empty">
+            <div className="org-empty-icon">❌</div>
+            <p className="org-empty-text">Deployment failed</p>
+            <p className="org-empty-subtext">{errorMsg}</p>
+            <button className="org-submit-btn" onClick={() => setStatus('idle')}>
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {status === 'success' && deployedEvent && (
           <div className="org-detail">
+            {/* Success header */}
             <div className="org-detail-header">
               <div>
-                <h2 className="org-detail-title">{selectedEvent.name}</h2>
+                <div className="org-success-badge">✅ Event Deployed Successfully</div>
+                <h2 className="org-detail-title">{deployedEvent.name}</h2>
                 <p className="org-detail-meta">
-                  {selectedEvent.totalParticipants} participants &middot;{' '}
-                  {selectedEvent.totalCheckpoints} checkpoints &middot;{' '}
-                  {selectedEvent.tokensPerCheckin} tokens / check-in
+                  Event ID: <strong>#{deployedEvent.eventId}</strong> &middot;{' '}
+                  {deployedEvent.totalCheckpoints} checkpoints &middot;{' '}
+                  {deployedEvent.tokensPerCheckin} tokens / check-in
                 </p>
                 <div className="org-badges-row">
-                  <span className="org-badge org-badge--gold">Gold: {selectedEvent.goldThreshold}+</span>
-                  <span className="org-badge org-badge--silver">Silver: {selectedEvent.silverThreshold}+</span>
-                  <span className="org-badge org-badge--bronze">Bronze: {selectedEvent.bronzeThreshold}+</span>
+                  <span className="org-badge org-badge--gold">🥇 Gold: {deployedEvent.goldThreshold}+</span>
+                  <span className="org-badge org-badge--silver">🥈 Silver: {deployedEvent.silverThreshold}+</span>
+                  <span className="org-badge org-badge--bronze">🥉 Bronze: {deployedEvent.bronzeThreshold}+</span>
                 </div>
+                <a
+                  className="org-etherscan-link"
+                  href={`https://sepolia.etherscan.io/tx/${deployedEvent.txHash}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  View on Etherscan ↗
+                </a>
               </div>
               <button
-                className="org-delete-btn"
-                onClick={() => handleDelete(selectedEvent.id)}
+                className="org-manage-btn"
+                onClick={() => navigate(`/organizer/event/${deployedEvent.eventId}`)}
               >
-                Delete Event
+                Manage Event →
               </button>
             </div>
 
+            {/* QR codes */}
+            <h3 className="org-qr-section-title">Checkpoint QR Codes</h3>
+            <p className="org-qr-section-sub">Print or display these at each checkpoint station</p>
             <div className="org-qr-grid">
-              {Array.from({ length: selectedEvent.totalCheckpoints }, (_, i) => {
-                const cpId = `cp_${i + 1}`
-                const url = generateQRData(selectedEvent.id, cpId)
+              {Array.from({ length: deployedEvent.totalCheckpoints }, (_, i) => {
+                const url = generateQRData(deployedEvent.eventId, i)
                 return (
-                  <div key={cpId} className="org-qr-card">
+                  <div key={i} className="org-qr-card">
                     <p className="org-qr-label">Checkpoint {i + 1}</p>
                     <div className="org-qr-box">
-                      <QRCodeSVG value={url} size={160} bgColor="#0d1117" fgColor="#e2e8f0" />
+                      <QRCodeSVG
+                        value={url}
+                        size={160}
+                        bgColor="#0d1117"
+                        fgColor="#e2e8f0"
+                        id={`qr-checkpoint-${i}`}
+                      />
                     </div>
                     <p className="org-qr-url">{url}</p>
                   </div>

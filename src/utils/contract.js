@@ -73,12 +73,19 @@ export async function createEventOnChain({
     // Extract eventId from logs
     const event = receipt.logs
       .map(log => {
-        try { return contract.interface.parseLog(log); } 
+        try { return contract.interface.parseLog(log); }
         catch { return null; }
       })
       .find(e => e?.name === "EventCreated");
 
     const eventId = event ? event.args[0].toString() : null;
+
+    // Update activeEvent cache so rest of app picks up new event immediately
+    if (eventId) {
+      const { setActiveEventId } = await import('./activeEvent.js');
+      setActiveEventId(eventId);
+    }
+
     return { success: true, eventId, txHash: receipt.hash };
   } catch (err) {
     console.error("createEvent error:", err);

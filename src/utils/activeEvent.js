@@ -32,3 +32,7 @@ export async function getActiveEventId() {
 export function clearCachedEventId() {
   cachedEventId = null;
 }
+
+export function setActiveEventId(id) {
+  cachedEventId = id;
+}
