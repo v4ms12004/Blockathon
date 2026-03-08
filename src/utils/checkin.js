@@ -1,4 +1,4 @@
-import { setupTrustline, sendTokens, hasCheckedIn } from "./xrpl";
+import { sendTokens, hasCheckedIn } from "./xrpl";
 import { isCheckedInLocally, saveCheckinLocally, getOrCreateWallet } from "./wallet";
 
 const TOKENS_PER_CHECKIN = 10;
@@ -25,7 +25,6 @@ export async function processCheckIn(checkpointId, eventId) {
   );
 
   if (alreadyOnChain) {
-    // Sync localStorage if somehow out of sync
     saveCheckinLocally(checkpointId);
     return {
       success: false,
@@ -34,29 +33,13 @@ export async function processCheckIn(checkpointId, eventId) {
     };
   }
 
-  // Step 4 — Set up trustline if first ever check-in
-  const localCheckins = JSON.parse(
-    localStorage.getItem("blockbadge_checkins") || "[]"
-  );
-
-  if (localCheckins.length === 0) {
-    console.log("First check-in — setting up trustline...");
-    const trustlineOk = await setupTrustline(wallet.seed);
-    if (!trustlineOk) {
-      return {
-        success: false,
-        reason: "TRUSTLINE_FAILED",
-        message: "Failed to set up token trustline. Please try again.",
-      };
-    }
-  }
-
-  // Step 5 — Send tokens to participant
+  // Step 4 — Send tokens (funding + trustline handled inside sendTokens)
   const result = await sendTokens(
     wallet.address,
     TOKENS_PER_CHECKIN,
     checkpointId,
-    eventId
+    eventId,
+    wallet.seed  // ← pass seed so sendTokens can setup trustline
   );
 
   if (!result.success) {
@@ -67,7 +50,7 @@ export async function processCheckIn(checkpointId, eventId) {
     };
   }
 
-  // Step 6 — Save check-in locally
+  // Step 5 — Save check-in locally
   saveCheckinLocally(checkpointId);
 
   return {
