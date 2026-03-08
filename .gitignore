@@ -29,3 +29,5 @@ event-info.json
 
 artifacts
 cache
+
+public/event-info.json

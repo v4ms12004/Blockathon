@@ -141,6 +141,16 @@ async function main() {
     JSON.stringify(eventInfo, null, 2)
   );
 
+  // ── Copy event-info.json to public/ for frontend access ──────
+const publicDir = path.join("public");
+if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir);
+fs.copyFileSync(
+  "event-info.json",
+  path.join(publicDir, "event-info.json")
+);
+console.log("✅ event-info.json copied to public/");
+
+
   console.log("\n── Summary ─────────────────────────────────────────");
   console.log("✅ Event ID:", eventId);
   console.log("✅ Contract:", CONTRACT_ADDRESS);

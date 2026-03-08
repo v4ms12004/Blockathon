@@ -2,29 +2,37 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getEventDetails, getParticipantDetails } from '../utils/contract'
 import './Participant.css'
+import { getActiveEventId } from '../utils/activeEvent'
 
 export default function Participant() {
   const navigate = useNavigate()
-  const eventId = import.meta.env.VITE_ACTIVE_EVENT_ID
 
   const [status, setStatus] = useState('disconnected') // disconnected | loading | loaded | error
   const [address, setAddress] = useState(null)
   const [event, setEvent] = useState(null)
   const [participant, setParticipant] = useState(null)
   const [error, setError] = useState(null)
+  const [eventId, setEventId] = useState(null)
 
   // Check if already connected on mount
   useEffect(() => {
     async function checkConnected() {
-      if (!window.ethereum) return
       try {
+        // Load event ID automatically from event-info.json
+        const id = await getActiveEventId()
+        setEventId(id)
+
+        if (!window.ethereum) return
         const accounts = await window.ethereum.request({ method: 'eth_accounts' })
         if (accounts.length > 0) {
           setAddress(accounts[0])
           setStatus('loading')
-          await loadData(accounts[0])
+          await loadData(accounts[0], id)
         }
-      } catch {}
+      } catch (err) {
+        setError(err.message)
+        setStatus('error')
+      }
     }
     checkConnected()
   }, [])
@@ -41,7 +49,7 @@ export default function Participant() {
       } else {
         setAddress(accounts[0])
         setStatus('loading')
-        loadData(accounts[0])
+        loadData(accounts[0], eventId)
       }
     }
     window.ethereum.on('accountsChanged', handleAccountsChanged)
@@ -59,20 +67,22 @@ export default function Participant() {
       const addr = accounts[0]
       setAddress(addr)
       setStatus('loading')
-      await loadData(addr)
+      const id = await getActiveEventId()
+      setEventId(id)
+      await loadData(addr, id)
     } catch (err) {
       setError(err.message || 'Failed to connect wallet.')
       setStatus('error')
     }
   }
 
-  async function loadData(addr) {
+  async function loadData(addr, id = eventId) {
     try {
       setError(null)
-      const eventResult = await getEventDetails(eventId)
+      const eventResult = await getEventDetails(id)
       if (!eventResult.success) throw new Error(eventResult.error || 'Failed to load event')
 
-      const pResult = await getParticipantDetails(eventId, addr)
+      const pResult = await getParticipantDetails(id, addr)
       if (!pResult.success) throw new Error(pResult.error || 'Failed to load participant data')
 
       setEvent(eventResult.event)
@@ -366,7 +376,7 @@ export default function Participant() {
         ) : null}
 
         {/* Refresh button */}
-        <button className="refresh-btn" onClick={() => loadData(address)}>
+        <button className="refresh-btn" onClick={() => loadData(address, eventId)}>
           ↻ Refresh
         </button>
 
