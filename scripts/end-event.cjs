@@ -8,9 +8,9 @@ const ABI = [
   "event EventEnded(uint256 indexed eventId)",
 ];
 
-const CONTRACT_ADDRESS = process.env.VITE_CONTRACT_ADDRESS;
-const RPC_URL = process.env.VITE_SEPOLIA_RPC_URL;
-const PRIVATE_KEY = process.env.VITE_DEPLOYER_PRIVATE_KEY;
+const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
+const RPC_URL          = process.env.SEPOLIA_RPC_URL;
+const PRIVATE_KEY      = process.env.DEPLOYER_PRIVATE_KEY;
 
 async function main() {
   // Read event ID from event-info.json

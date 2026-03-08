@@ -10,9 +10,9 @@ const ABI = [
   "event CheckpointCreated(uint256 indexed eventId, uint256 checkpointId)",
 ];
 
-const CONTRACT_ADDRESS = process.env.VITE_CONTRACT_ADDRESS;
-const RPC_URL = process.env.VITE_SEPOLIA_RPC_URL;
-const PRIVATE_KEY = process.env.VITE_DEPLOYER_PRIVATE_KEY;
+const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
+const RPC_URL          = process.env.SEPOLIA_RPC_URL;
+const PRIVATE_KEY      = process.env.DEPLOYER_PRIVATE_KEY;
 const APP_URL = process.env.VITE_APP_URL || "http://localhost:5173";
 
 // ── Event configuration — edit these before demo day ──────────

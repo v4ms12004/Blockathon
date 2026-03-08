@@ -16,9 +16,9 @@ const ABI = [
   "function getNFTTokenURI(uint256 tokenId) external view returns (string)",
 ];
 
-const CONTRACT_ADDRESS = process.env.VITE_CONTRACT_ADDRESS;
-const RPC_URL = process.env.VITE_SEPOLIA_RPC_URL;
-const PRIVATE_KEY = process.env.VITE_DEPLOYER_PRIVATE_KEY;
+const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
+const RPC_URL = process.env.SEPOLIA_RPC_URL;
+const PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY;
 
 async function main() {
   console.log("🚀 Testing BlockBadge Smart Contract\n");
