@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { checkInOnChain, getParticipantDetails } from "../utils/contract";
+import { checkInOnChain, getParticipantDetails, getEventDetails } from "../utils/contract";
 import { sendTokens } from "../utils/xrpl";
 import { getOrCreateWallet } from "../utils/wallet";
 import "./CheckIn.css";
@@ -30,6 +30,13 @@ export default function CheckIn() {
         setWalletAddress(userAddress);
 
         setStatus("processing");
+
+        // Read tokensPerCheckin from the contract — never hardcode this
+        const eventDetails = await getEventDetails(eventId);
+        const tokensPerCheckin = eventDetails.success
+          ? Number(eventDetails.event.tokensPerCheckin)
+          : 10; // fallback only if contract read fails
+
         const result = await checkInOnChain(eventId, checkpointId);
 
         if (!result.success) {
@@ -48,13 +55,13 @@ export default function CheckIn() {
         setTxHash(result.txHash);
 
         const wallet = getOrCreateWallet();
-        await sendTokens(wallet.address, 10, `checkpoint-${checkpointId}`, eventId);
+        await sendTokens(wallet.address, tokensPerCheckin, `checkpoint-${checkpointId}`, eventId);
 
         const p = await getParticipantDetails(eventId, userAddress);
         if (p.success) setBalance(p.participant.tokenBalance);
 
         setStatus("success");
-        setMessage("✅ Checked in! You earned 10 BLKPT tokens.");
+        setMessage(`✅ Checked in! You earned ${tokensPerCheckin} BLKPT tokens.`);
       } catch (err) {
         console.error(err);
         setStatus("error");
@@ -126,4 +133,3 @@ export default function CheckIn() {
     </div>
   );
 }
-

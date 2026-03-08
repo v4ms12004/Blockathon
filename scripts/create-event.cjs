@@ -1,3 +1,6 @@
+//This file is only used for test perposes and not while doing the we version.
+
+
 require("dotenv").config();
 const { ethers } = require("ethers");
 const QRCode = require("qrcode");

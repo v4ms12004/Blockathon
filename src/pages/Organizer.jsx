@@ -8,8 +8,8 @@ import './Organizer.css'
 function calcThresholds(totalCheckpoints, tokensPerCheckin) {
   return {
     goldThreshold:   totalCheckpoints * tokensPerCheckin,
-    silverThreshold: Math.floor(totalCheckpoints * 0.66) * tokensPerCheckin,
-    bronzeThreshold: Math.floor(totalCheckpoints * 0.33) * tokensPerCheckin,
+    silverThreshold: Math.max(2, Math.floor(totalCheckpoints * 0.66)) * tokensPerCheckin,
+    bronzeThreshold: Math.max(1, Math.floor(totalCheckpoints * 0.33)) * tokensPerCheckin,
   }
 }
 
