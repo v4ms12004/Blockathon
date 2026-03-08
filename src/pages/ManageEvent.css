@@ -396,3 +396,34 @@
   font-size: 12px;
   text-decoration: none;
 }
+
+.me-qr-print-btn {
+  background: #1e2736;
+  color: #e2e8f0;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.me-qr-print-btn--redeem {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid #f59e0b;
+}
+
+.me-qr-card--redeem {
+  border: 1px solid #f59e0b;
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.me-qr-redeem-note {
+  color: #f59e0b;
+  font-size: 11px;
+  text-align: center;
+  margin-top: 6px;
+  line-height: 1.4;
+}

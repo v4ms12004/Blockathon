@@ -76,6 +76,44 @@ export default function ManageEvent() {
 
   const totalCheckpoints = Number(event.totalCheckpoints)
 
+  function printQR(url, label) {
+    const printContent = `
+      <html>
+        <head>
+          <title>BlockBadge QR — ${label}</title>
+          <style>
+            body {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              min-height: 100vh;
+              margin: 0;
+              font-family: sans-serif;
+              background: #fff;
+            }
+            h2 { font-size: 24px; margin-bottom: 16px; color: #000; }
+            p { font-size: 12px; color: #555; margin-top: 12px; word-break: break-all; text-align: center; max-width: 300px; }
+            img { width: 300px; height: 300px; }
+          </style>
+        </head>
+        <body>
+          <h2>BlockBadge — ${label}</h2>
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}" />
+          <p>${url}</p>
+          <script>
+            window.onload = () => {
+              setTimeout(() => { window.print(); }, 500);
+            }
+          <\/script>
+        </body>
+      </html>
+    `
+    const blob = new Blob([printContent], { type: 'text/html' })
+    const blobUrl = URL.createObjectURL(blob)
+    window.open(blobUrl, '_blank')
+  }
+
   return (
     <div className="me-layout">
       {/* ── Left sidebar: event info ── */}
@@ -205,9 +243,41 @@ export default function ManageEvent() {
                   <QRCodeSVG value={url} size={160} bgColor="#0d1117" fgColor="#e2e8f0" />
                 </div>
                 <p className="me-qr-url">{url}</p>
+                <button
+                  className="me-qr-print-btn"
+                  onClick={() => printQR(url, `Checkpoint ${i + 1}`)}
+                >
+                  🖨️ Print
+                </button>
               </div>
             )
           })}
+
+          {/* Redeem QR */}
+          <div className="me-qr-card me-qr-card--redeem">
+            <p className="me-qr-label">🎖️ Badge Redemption</p>
+            <div className="me-qr-box">
+              <QRCodeSVG
+                value={`${window.location.origin}/redeem/${eventId}`}
+                size={160}
+                bgColor="#0d1117"
+                fgColor="#f59e0b"
+              />
+            </div>
+            <p className="me-qr-url">{window.location.origin}/redeem/{eventId}</p>
+            <p className="me-qr-redeem-note">
+              Share after event ends — participants scan to claim their NFT badge
+            </p>
+            <button
+              className="me-qr-print-btn me-qr-print-btn--redeem"
+              onClick={() => printQR(
+                `${window.location.origin}/redeem/${eventId}`,
+                'Badge Redemption'
+              )}
+            >
+              🖨️ Print
+            </button>
+          </div>
         </div>
       </main>
     </div>

@@ -98,6 +98,39 @@ export default function Organizer() {
     Number(form.tokensPerCheckin) || 0
   )
 
+  function printQR(url, label) {
+    const printWindow = window.open('', '_blank')
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>BlockBadge QR — ${label}</title>
+          <style>
+            body {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              min-height: 100vh;
+              margin: 0;
+              font-family: sans-serif;
+              background: #fff;
+            }
+            h2 { font-size: 24px; margin-bottom: 16px; color: #000; }
+            p { font-size: 12px; color: #555; margin-top: 12px; word-break: break-all; text-align: center; max-width: 300px; }
+            img { width: 300px; height: 300px; }
+          </style>
+        </head>
+        <body>
+          <h2>BlockBadge — ${label}</h2>
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}" />
+          <p>${url}</p>
+          <script>window.onload = () => { window.print(); window.close(); }<\/script>
+        </body>
+      </html>
+    `)
+    printWindow.document.close()
+  }
+
   return (
     <div className="org-layout">
       {/* ── Left panel: form ── */}
@@ -267,19 +300,52 @@ export default function Organizer() {
                 return (
                   <div key={i} className="org-qr-card">
                     <p className="org-qr-label">Checkpoint {i + 1}</p>
-                    <div className="org-qr-box">
+                    <div className="org-qr-box" id={`qr-checkin-${i}`}>
                       <QRCodeSVG
                         value={url}
                         size={160}
                         bgColor="#0d1117"
                         fgColor="#e2e8f0"
-                        id={`qr-checkpoint-${i}`}
                       />
                     </div>
                     <p className="org-qr-url">{url}</p>
+                    <button
+                      className="org-qr-print-btn"
+                      onClick={() => printQR(url, `Checkpoint ${i + 1}`)}
+                    >
+                      🖨️ Print
+                    </button>
                   </div>
                 )
               })}
+
+              {/* Redeem QR */}
+              <div className="org-qr-card org-qr-card--redeem">
+                <p className="org-qr-label">🎖️ Badge Redemption</p>
+                <div className="org-qr-box">
+                  <QRCodeSVG
+                    value={`${window.location.origin}/redeem/${deployedEvent.eventId}`}
+                    size={160}
+                    bgColor="#0d1117"
+                    fgColor="#f59e0b"
+                  />
+                </div>
+                <p className="org-qr-url">
+                  {window.location.origin}/redeem/{deployedEvent.eventId}
+                </p>
+                <p className="org-qr-redeem-note">
+                  Share after event ends — participants scan to claim their NFT badge
+                </p>
+                <button
+                  className="org-qr-print-btn org-qr-print-btn--redeem"
+                  onClick={() => printQR(
+                    `${window.location.origin}/redeem/${deployedEvent.eventId}`,
+                    'Badge Redemption'
+                  )}
+                >
+                  🖨️ Print
+                </button>
+              </div>
             </div>
           </div>
         )}
