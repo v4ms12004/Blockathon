@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none">
+  <defs>
+    <linearGradient id="shieldTop" x1="128" y1="28" x2="128" y2="168" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B163D"/>
+      <stop offset="1" stop-color="#6F3DFF"/>
+    </linearGradient>
+    <linearGradient id="shieldBottom" x1="128" y1="148" x2="128" y2="228" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFD86B"/>
+      <stop offset="1" stop-color="#F2A900"/>
+    </linearGradient>
+    <linearGradient id="cubeFront" x1="128" y1="88" x2="128" y2="154" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#72EEFF"/>
+      <stop offset="1" stop-color="#23A8FF"/>
+    </linearGradient>
+    <linearGradient id="cubeSide" x1="128" y1="88" x2="158" y2="132" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2E8FFF"/>
+      <stop offset="1" stop-color="#195DCC"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Outer shield -->
+  <path d="M128 18L223 54V122C223 183 180 222 128 240C76 222 33 183 33 122V54L128 18Z" fill="#06102F"/>
+  <path d="M128 32L209 62V121C209 173 173 207 128 224C83 207 47 173 47 121V62L128 32Z" fill="#D8E5FF"/>
+  <path d="M128 42L199 68V120C199 160 173 189 128 209C83 189 57 160 57 120V68L128 42Z" fill="url(#shieldTop)"/>
+  <path d="M57 146L128 209L199 146V186C180 206 157 221 128 232C99 221 76 206 57 186V146Z" fill="url(#shieldBottom)"/>
+
+  <!-- Blockchain icon -->
+  <g filter="url(#glow)" stroke="#8EEBFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M128 74L94 92M128 74L162 92M128 150V174M94 92L81 114M162 92L175 114" opacity="0.95"/>
+    <circle cx="81" cy="114" r="4" fill="#8EEBFF" stroke="none"/>
+    <circle cx="175" cy="114" r="4" fill="#8EEBFF" stroke="none"/>
+    <circle cx="128" cy="174" r="4" fill="#8EEBFF" stroke="none"/>
+  </g>
+
+  <!-- Center cube -->
+  <g transform="translate(0 2)">
+    <path d="M128 76L160 94L128 112L96 94L128 76Z" fill="#B8F7FF"/>
+    <path d="M96 94L128 112V150L96 132V94Z" fill="url(#cubeFront)"/>
+    <path d="M160 94L128 112V150L160 132V94Z" fill="url(#cubeSide)"/>
+    <path d="M128 76L160 94L128 112L96 94L128 76Z" stroke="#E9FFFF" stroke-width="3"/>
+  </g>
+
+  <!-- Small nodes -->
+  <g>
+    <path d="M128 58L143 66L128 74L113 66L128 58Z" fill="#B8F7FF"/>
+    <path d="M113 66L128 74V89L113 81V66Z" fill="#59D8FF"/>
+    <path d="M143 66L128 74V89L143 81V66Z" fill="#2E8FFF"/>
+
+    <path d="M82 84L97 92L82 100L67 92L82 84Z" fill="#B8F7FF"/>
+    <path d="M67 92L82 100V115L67 107V92Z" fill="#59D8FF"/>
+    <path d="M97 92L82 100V115L97 107V92Z" fill="#2E8FFF"/>
+
+    <path d="M174 84L189 92L174 100L159 92L174 84Z" fill="#B8F7FF"/>
+    <path d="M159 92L174 100V115L159 107V92Z" fill="#59D8FF"/>
+    <path d="M189 92L174 100V115L189 107V92Z" fill="#2E8FFF"/>
+  </g>
+</svg>
